@@ -51,7 +51,7 @@ Try the following:
 
 ---
 
-### Authentication Failed
+## Authentication Failed
 
 Possible reasons:
 

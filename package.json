@@ -1,0 +1,31 @@
+{
+  "name": "quickdesk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QuickDesk - Helpdesk System with AI-powered RAG",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start:backend": "npm run start:prod --workspace=backend",
+    "start:frontend": "npm run start --workspace=frontend",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspace=backend",
+    "db:up": "docker compose -f dockerDb/docker-compose.yml up -d",
+    "db:down": "docker compose -f dockerDb/docker-compose.yml down",
+    "prisma:generate": "npm run prisma generate --workspace=backend",
+    "prisma:push": "npm run prisma db push --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
