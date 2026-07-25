@@ -40,8 +40,8 @@
 | **Phase 3C: Frontend — Employee Views** | 5 | 0 | 0 | 5 | 0 |
 | **Phase 3D: Frontend — Agent Views** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 4A: Metrics & Analytics** | 3 | 0 | 0 | 3 | 0 |
-| **Phase 4B: Polish & Deliverables** | 6 | 0 | 0 | 6 | 0 |
-| **TOTAL** | **68** | **17** | **0** | **51** | **0** |
+| **Phase 4B: Polish & Deliverables** | 6 | 1 | 0 | 5 | 0 |
+| **TOTAL** | **68** | **18** | **0** | **50** | **0** |
 
 ---
 
@@ -224,7 +224,7 @@
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
 | T-63 | Create seed script (`prisma/seed.ts`) — create 1 agent + 1 employee user (bcrypt hashed), load KB articles into vector store | Backend | ⬜ Not Started | T-09, T-30 | — | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L210-L218) |
-| T-64 | Create `.env.example` — list all required env variables with placeholder values, no real keys | DevOps | ⬜ Not Started | T-04 | — | [08-deployment.md](file:///E:/ME/quickdesk/docs/08-deployment.md#L18-L32) |
+| T-64 | Create `.env.example` — list all required env variables with placeholder values, no real keys | DevOps | ✅ Done | T-04 | 2026-07-25 | [08-deployment.md](file:///E:/ME/quickdesk/docs/08-deployment.md#L18-L32) |
 | T-65 | Update `docker-compose.yml` — ensure backend + frontend + postgres spin up correctly | DevOps | ⬜ Not Started | T-63 | — | [08-deployment.md](file:///E:/ME/quickdesk/docs/08-deployment.md#L77-L128) |
 | T-66 | UI polish pass — consistent styling, loading states, error states, responsive layout, micro-animations | Frontend | ⬜ Not Started | T-53, T-55, T-59, T-62 | — | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
 | T-67 | Write comprehensive `README.md` — what is it, run instructions, architecture diagram, API table, decisions & tradeoffs, known issues | Docs | ⬜ Not Started | T-66 | — | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
@@ -421,6 +421,7 @@ graph TD
 | 2026-07-25 | T-15 | ⬜ → ✅ | JwtAuthGuard implemented to protect private endpoints |
 | 2026-07-25 | T-16 | ⬜ → ✅ | RolesGuard and @Roles() decorator implemented for backend RBAC enforcement |
 | 2026-07-25 | T-17 | ⬜ → ✅ | GET /api/auth/me implemented to return authenticated user profile |
+| 2026-07-25 | T-64 | ⬜ → ✅ | Created root .env.example, backend .env.example, and frontend .env.local.example templates |
 
 ---
 
