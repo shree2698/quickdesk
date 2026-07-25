@@ -25,7 +25,9 @@
     "prisma:generate": "npx prisma generate --config=backend/prisma.config.ts",
     "prisma:migrate": "npx prisma migrate dev --config=backend/prisma.config.ts",
     "prisma:push": "npx prisma db push --config=backend/prisma.config.ts",
-    "db:seed": "npx tsx backend/prisma/seed.ts"
+    "prisma:reset": "npx prisma migrate reset --force --config=backend/prisma.config.ts",
+    "db:seed": "npx tsx backend/prisma/seed.ts",
+    "db:reset": "npm run prisma:reset && npm run db:seed"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
