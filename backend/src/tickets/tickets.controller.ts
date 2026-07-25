@@ -28,8 +28,8 @@ import { Role } from '@prisma/client';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  @ApiOperation({ summary: 'Submit a new support ticket (Employee only)' })
-  @ApiResponse({ status: 201, description: 'Ticket successfully created' })
+  @ApiOperation({ summary: 'Submit a new support ticket (Triggers AI auto-classification)' })
+  @ApiResponse({ status: 201, description: 'Ticket successfully created with AI predictions' })
   @Roles(Role.EMPLOYEE, Role.AGENT, Role.ADMIN)
   @Post()
   async create(@GetUser('id') employeeId: string, @Body() dto: CreateTicketDto) {
@@ -56,6 +56,14 @@ export class TicketsController {
     @GetUser() user: { id: string; role: Role },
   ) {
     return this.ticketsService.findOne(id, user);
+  }
+
+  @ApiOperation({ summary: 'Generate AI Copilot response draft for a ticket (Agent/Admin only)' })
+  @ApiResponse({ status: 200, description: 'Returns AI copilot response draft and KB citations' })
+  @Roles(Role.AGENT, Role.ADMIN)
+  @Post(':id/copilot-suggest')
+  async generateCopilotDraft(@Param('id') id: string) {
+    return this.ticketsService.generateCopilotDraft(id);
   }
 
   @ApiOperation({ summary: 'Override ticket category (Agent/Admin only)' })

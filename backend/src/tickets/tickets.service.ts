@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AiService } from '../ai/ai.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { TicketQueryDto } from './dto/ticket-query.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -14,15 +15,25 @@ import { Role, TicketStatus } from '@prisma/client';
 
 @Injectable()
 export class TicketsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private aiService: AiService,
+  ) {}
 
   async create(employeeId: string, dto: CreateTicketDto) {
+    // Run AI ticket classification for category & priority
+    const aiPrediction = await this.aiService.classifyTicket(dto.title, dto.description);
+
     return this.prisma.ticket.create({
       data: {
         title: dto.title,
         description: dto.description,
         attachmentFilename: dto.attachmentFilename,
         employeeId,
+        category: aiPrediction.category,
+        priority: aiPrediction.priority,
+        aiCategory: aiPrediction.category,
+        aiPriority: aiPrediction.priority,
       },
       include: {
         employee: {
@@ -38,7 +49,6 @@ export class TicketsService {
   async findAll(user: { id: string; role: Role }, query: TicketQueryDto) {
     const where: any = {};
 
-    // Ownership filter: employees see only their tickets
     if (user.role === Role.EMPLOYEE) {
       where.employeeId = user.id;
     }
@@ -99,7 +109,6 @@ export class TicketsService {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
 
-    // Role check: employees can view only their own ticket
     if (user.role === Role.EMPLOYEE && ticket.employeeId !== user.id) {
       throw new ForbiddenException('You do not have permission to view this ticket');
     }
@@ -123,7 +132,6 @@ export class TicketsService {
       },
     });
 
-    // Log category override if changed
     if (oldCategory !== dto.category) {
       await this.prisma.auditLog.create({
         data: {
@@ -155,7 +163,6 @@ export class TicketsService {
       },
     });
 
-    // Log priority override if changed
     if (oldPriority !== dto.priority) {
       await this.prisma.auditLog.create({
         data: {
@@ -190,6 +197,26 @@ export class TicketsService {
         agent: { select: { id: true, name: true, email: true } },
       },
     });
+  }
+
+  async generateCopilotDraft(id: string) {
+    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException(`Ticket with ID ${id} not found`);
+    }
+
+    const copilotResult = await this.aiService.generateCopilotDraft(ticket.title, ticket.description);
+
+    // Store AI draft reply and citations on ticket record
+    await this.prisma.ticket.update({
+      where: { id },
+      data: {
+        aiDraftReply: copilotResult.suggestion,
+        ragCitations: copilotResult.citations.map((c) => c.title),
+      },
+    });
+
+    return copilotResult;
   }
 
   async getAuditLogs(id: string) {

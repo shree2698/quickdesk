@@ -33,15 +33,15 @@
 | **Phase 1A: Database & Prisma** | 5 | 5 | 0 | 0 | 0 |
 | **Phase 1B: Auth Module** | 7 | 7 | 0 | 0 | 0 |
 | **Phase 1C: Tickets Module** | 8 | 8 | 0 | 0 | 0 |
-| **Phase 2A: Knowledge Base & RAG** | 7 | 0 | 0 | 7 | 0 |
-| **Phase 2B: AI Classification** | 5 | 0 | 0 | 5 | 0 |
+| **Phase 2A: Knowledge Base & RAG** | 7 | 7 | 0 | 0 | 0 |
+| **Phase 2B: AI Classification** | 5 | 5 | 0 | 0 | 0 |
 | **Phase 3A: Real-Time (Socket.io)** | 5 | 0 | 0 | 5 | 0 |
 | **Phase 3B: Frontend — Auth & Layout** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 3C: Frontend — Employee Views** | 5 | 0 | 0 | 5 | 0 |
 | **Phase 3D: Frontend — Agent Views** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 4A: Metrics & Analytics** | 3 | 0 | 0 | 3 | 0 |
 | **Phase 4B: Polish & Deliverables** | 6 | 1 | 0 | 5 | 0 |
-| **TOTAL** | **68** | **26** | **0** | **42** | **0** |
+| **TOTAL** | **68** | **38** | **0** | **30** | **0** |
 
 ---
 
@@ -116,13 +116,13 @@
 
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
-| T-26 | Create `AiModule` with `RagService` and `AiService` | Backend | ⬜ Not Started | T-10 | — | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L54) |
-| T-27 | Implement KB document loader — read markdown files from `knowledge-base/`, parse with LangChain `DirectoryLoader` | Backend | ⬜ Not Started | T-26, T-05 | — | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L48-L55) |
-| T-28 | Implement chunking — `RecursiveCharacterTextSplitter` (500 chars, 50 overlap) | Backend | ⬜ Not Started | T-27 | — | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L51-L55) |
-| T-29 | Implement embedding generation — use Gemini `text-embedding-004` (768-dim vectors) via LangChain | Backend | ⬜ Not Started | T-28 | — | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L57-L58) |
-| T-30 | Set up vector store — pgvector column in `KnowledgeArticleChunk`, HNSW index, cosine similarity search | Backend | ⬜ Not Started | T-29, T-09 | — | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L62-L84) |
-| T-31 | Implement RAG retrieval + generation — top-K (k=3) similarity search → prompt template → Gemini LLM → response with citations | Backend | ⬜ Not Started | T-30 | — | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L89-L116) |
-| T-32 | Implement `POST /api/ai/chat` — RAG-assisted Q&A endpoint for employees, with fallback when no relevant chunks found | Backend | ⬜ Not Started | T-31 | — | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L99-L120) |
+| T-26 | Create `AiModule` with `RagService` and `AiService` | Backend | ✅ Done | T-10 | 2026-07-25 | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L54) |
+| T-27 | Implement KB document loader — read markdown files from `knowledge-base/`, parse with LangChain `DirectoryLoader` | Backend | ✅ Done | T-26, T-05 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L48-L55) |
+| T-28 | Implement chunking — `RecursiveCharacterTextSplitter` (500 chars, 50 overlap) | Backend | ✅ Done | T-27 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L51-L55) |
+| T-29 | Implement embedding generation — use Gemini `text-embedding-004` (768-dim vectors) via LangChain | Backend | ✅ Done | T-28 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L57-L58) |
+| T-30 | Set up vector store — pgvector column in `KnowledgeArticleChunk`, HNSW index, cosine similarity search | Backend | ✅ Done | T-29, T-09 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L62-L84) |
+| T-31 | Implement RAG retrieval + generation — top-K (k=3) similarity search → prompt template → Gemini LLM → response with citations | Backend | ✅ Done | T-30 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L89-L116) |
+| T-32 | Implement `POST /api/ai/chat` — RAG-assisted Q&A endpoint for employees, with fallback when no relevant chunks found | Backend | ✅ Done | T-31 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L99-L120) |
 
 ---
 
@@ -133,11 +133,11 @@
 
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
-| T-33 | Implement AI category prediction — structured JSON prompt to Gemini, parse response into `IT\|HR\|Finance\|Admin\|Other` | Backend | ⬜ Not Started | T-26 | — | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L32-L37) |
-| T-34 | Implement AI priority prediction — structured JSON prompt, parse into `Low\|Medium\|High` | Backend | ⬜ Not Started | T-33 | — | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L39-L44) |
-| T-35 | Implement category validation fallback — if LLM returns invalid category, default to `Other` and log anomaly | Backend | ⬜ Not Started | T-33 | — | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
-| T-36 | Integrate AI classification into ticket creation — call AI on `POST /api/tickets`, store `aiCategory` + `aiPriority` | Backend | ⬜ Not Started | T-19, T-34, T-35 | — | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
-| T-37 | Implement `POST /api/tickets/:id/copilot-suggest` — RAG-based draft reply for agents using ticket context + KB articles | Backend | ⬜ Not Started | T-31, T-21 | — | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L182-L190) |
+| T-33 | Implement AI category prediction — structured JSON prompt to Gemini, parse response into `IT\|HR\|Finance\|Admin\|Other` | Backend | ✅ Done | T-26 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L32-L37) |
+| T-34 | Implement AI priority prediction — structured JSON prompt, parse into `Low\|Medium\|High` | Backend | ✅ Done | T-33 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L39-L44) |
+| T-35 | Implement category validation fallback — if LLM returns invalid category, default to `Other` and log anomaly | Backend | ✅ Done | T-33 | 2026-07-25 | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
+| T-36 | Integrate AI classification into ticket creation — call AI on `POST /api/tickets`, store `aiCategory` + `aiPriority` | Backend | ✅ Done | T-19, T-34, T-35 | 2026-07-25 | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
+| T-37 | Implement `POST /api/tickets/:id/copilot-suggest` — RAG-based draft reply for agents using ticket context + KB articles | Backend | ✅ Done | T-31, T-21 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L182-L190) |
 
 ---
 
@@ -430,6 +430,18 @@ graph TD
 | 2026-07-25 | T-23 | ⬜ → ✅ | AuditLog creation logic integrated into category & priority overrides |
 | 2026-07-25 | T-24 | ⬜ → ✅ | POST /api/tickets/:id/reply implemented to store response and set status to RESOLVED |
 | 2026-07-25 | T-25 | ⬜ → ✅ | GET /api/tickets/:id/audit-log implemented to retrieve override history |
+| 2026-07-25 | T-26 | ⬜ → ✅ | AiModule created with RagService and AiService |
+| 2026-07-25 | T-27 | ⬜ → ✅ | KB markdown reader and document loader implemented in RagService |
+| 2026-07-25 | T-28 | ⬜ → ✅ | Chunking strategy with RecursiveCharacterTextSplitter (500 chars, 50 overlap) implemented |
+| 2026-07-25 | T-29 | ⬜ → ✅ | Embedding generation with text-embedding-004 model integrated |
+| 2026-07-25 | T-30 | ⬜ → ✅ | Cosine similarity vector search queries configured with pgvector |
+| 2026-07-25 | T-31 | ⬜ → ✅ | Grounded RAG Q&A answering pipeline with citations implemented |
+| 2026-07-25 | T-32 | ⬜ → ✅ | POST /api/ai/chat endpoint created with similarity fallback checks |
+| 2026-07-25 | T-33 | ⬜ → ✅ | AI category prediction with structured JSON prompt implemented |
+| 2026-07-25 | T-34 | ⬜ → ✅ | AI priority prediction with structured JSON prompt implemented |
+| 2026-07-25 | T-35 | ⬜ → ✅ | Category validation fallback logic created |
+| 2026-07-25 | T-36 | ⬜ → ✅ | Integrated AI classification into POST /api/tickets creation pipeline |
+| 2026-07-25 | T-37 | ⬜ → ✅ | POST /api/tickets/:id/copilot-suggest RAG response draft endpoint created |
 
 ---
 
@@ -445,4 +457,4 @@ graph TD
 6. After completing → update status to `✅ Done`, add date, append to Change Log
 7. Update the **Progress Summary** counts
 
-**Current next task:** `T-26` (Create AiModule with RagService and AiService)
+**Current next task:** `T-38` (Create RealtimeModule with Socket.io WebSocketGateway)
