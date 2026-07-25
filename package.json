@@ -20,10 +20,12 @@
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "lint": "npm run lint --workspaces",
     "format": "npm run format --workspace=backend",
-    "db:up": "docker compose -f dockerDb/docker-compose.yml up -d",
-    "db:down": "docker compose -f dockerDb/docker-compose.yml down",
-    "prisma:generate": "npm run prisma generate --workspace=backend",
-    "prisma:push": "npm run prisma db push --workspace=backend"
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "prisma:generate": "npx prisma generate --config=backend/prisma.config.ts",
+    "prisma:migrate": "npx prisma migrate dev --config=backend/prisma.config.ts",
+    "prisma:push": "npx prisma db push --config=backend/prisma.config.ts",
+    "db:seed": "npx tsx backend/prisma/seed.ts"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

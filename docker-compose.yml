@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: ankane/pgvector:v0.5.1
+    image: pgvector/pgvector:pg16
     container_name: quickdesk-postgres
     ports:
       - "5432:5432"
