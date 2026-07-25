@@ -6,9 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { AiModule } from './ai/ai.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, TicketsModule, AiModule],
+  imports: [PrismaModule, AuthModule, TicketsModule, AiModule, RealtimeModule],
   controllers: [AppController],
   providers: [
     AppService,

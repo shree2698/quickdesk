@@ -35,13 +35,13 @@
 | **Phase 1C: Tickets Module** | 8 | 8 | 0 | 0 | 0 |
 | **Phase 2A: Knowledge Base & RAG** | 7 | 7 | 0 | 0 | 0 |
 | **Phase 2B: AI Classification** | 5 | 5 | 0 | 0 | 0 |
-| **Phase 3A: Real-Time (Socket.io)** | 5 | 0 | 0 | 5 | 0 |
+| **Phase 3A: Real-Time (Socket.io)** | 5 | 5 | 0 | 0 | 0 |
 | **Phase 3B: Frontend — Auth & Layout** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 3C: Frontend — Employee Views** | 5 | 0 | 0 | 5 | 0 |
 | **Phase 3D: Frontend — Agent Views** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 4A: Metrics & Analytics** | 3 | 0 | 0 | 3 | 0 |
 | **Phase 4B: Polish & Deliverables** | 6 | 1 | 0 | 5 | 0 |
-| **TOTAL** | **68** | **38** | **0** | **30** | **0** |
+| **TOTAL** | **68** | **43** | **0** | **25** | **0** |
 
 ---
 
@@ -148,11 +148,11 @@
 
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
-| T-38 | Create `RealtimeModule` with Socket.io `WebSocketGateway`, JWT handshake auth | Backend | ⬜ Not Started | T-14 | — | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L7-L24) |
-| T-39 | Implement room management — `channel-agents` for all agents, `ticket-{id}` for ticket parties | Backend | ⬜ Not Started | T-38 | — | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L83-L87) |
-| T-40 | Implement `ticket:new` event — emit to `channel-agents` when employee creates ticket (dashboard live update) | Backend | ⬜ Not Started | T-39, T-19 | — | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L91-L103) |
-| T-41 | Implement `ticket:resolved` event — emit to ticket room when agent sends reply (employee sees status flip) | Backend | ⬜ Not Started | T-39, T-24 | — | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L91-L103) |
-| T-42 | Implement `send_message` / `message_received` events — real-time chat in ticket rooms | Backend | ⬜ Not Started | T-39 | — | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L56-L89) |
+| T-38 | Create `RealtimeModule` with Socket.io `WebSocketGateway`, JWT handshake auth | Backend | ✅ Done | T-14 | 2026-07-25 | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L7-L24) |
+| T-39 | Implement room management — `channel-agents` for all agents, `ticket-{id}` for ticket parties | Backend | ✅ Done | T-38 | 2026-07-25 | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L83-L87) |
+| T-40 | Implement `ticket:new` event — emit to `channel-agents` when employee creates ticket (dashboard live update) | Backend | ✅ Done | T-39, T-19 | 2026-07-25 | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L91-L103) |
+| T-41 | Implement `ticket:resolved` event — emit to ticket room when agent sends reply (employee sees status flip) | Backend | ✅ Done | T-39, T-24 | 2026-07-25 | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L91-L103) |
+| T-42 | Implement `send_message` / `message_received` events — real-time chat in ticket rooms | Backend | ✅ Done | T-39 | 2026-07-25 | [07-realtime.md](file:///E:/ME/quickdesk/docs/07-realtime.md#L56-L89) |
 
 ---
 
@@ -442,6 +442,11 @@ graph TD
 | 2026-07-25 | T-35 | ⬜ → ✅ | Category validation fallback logic created |
 | 2026-07-25 | T-36 | ⬜ → ✅ | Integrated AI classification into POST /api/tickets creation pipeline |
 | 2026-07-25 | T-37 | ⬜ → ✅ | POST /api/tickets/:id/copilot-suggest RAG response draft endpoint created |
+| 2026-07-25 | T-38 | ⬜ → ✅ | RealtimeModule and Socket.io RealtimeGateway created with JWT handshake auth |
+| 2026-07-25 | T-39 | ⬜ → ✅ | Socket room management (channel-agents and ticket-{id}) implemented |
+| 2026-07-25 | T-40 | ⬜ → ✅ | ticket:new event broadcast to channel-agents integrated on ticket creation |
+| 2026-07-25 | T-41 | ⬜ → ✅ | ticket:resolved event broadcast integrated on agent ticket reply resolution |
+| 2026-07-25 | T-42 | ⬜ → ✅ | send_message and message_received real-time chat event handlers implemented |
 
 ---
 
@@ -457,4 +462,4 @@ graph TD
 6. After completing → update status to `✅ Done`, add date, append to Change Log
 7. Update the **Progress Summary** counts
 
-**Current next task:** `T-38` (Create RealtimeModule with Socket.io WebSocketGateway)
+**Current next task:** `T-43` (Create global design system & base CSS variables in frontend)

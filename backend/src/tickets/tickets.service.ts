@@ -2,10 +2,10 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { TicketQueryDto } from './dto/ticket-query.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -18,13 +18,13 @@ export class TicketsService {
   constructor(
     private prisma: PrismaService,
     private aiService: AiService,
+    private realtimeGateway: RealtimeGateway,
   ) {}
 
   async create(employeeId: string, dto: CreateTicketDto) {
-    // Run AI ticket classification for category & priority
     const aiPrediction = await this.aiService.classifyTicket(dto.title, dto.description);
 
-    return this.prisma.ticket.create({
+    const ticket = await this.prisma.ticket.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -44,6 +44,11 @@ export class TicketsService {
         },
       },
     });
+
+    // Notify all online agents via Socket.io
+    this.realtimeGateway.notifyTicketCreated(ticket);
+
+    return ticket;
   }
 
   async findAll(user: { id: string; role: Role }, query: TicketQueryDto) {
@@ -95,6 +100,12 @@ export class TicketsService {
         },
         agent: {
           select: { id: true, name: true, email: true },
+        },
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            sender: { select: { id: true, name: true, email: true, role: true } },
+          },
         },
         auditLogs: {
           orderBy: { createdAt: 'desc' },
@@ -184,7 +195,7 @@ export class TicketsService {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
 
-    return this.prisma.ticket.update({
+    const resolvedTicket = await this.prisma.ticket.update({
       where: { id },
       data: {
         finalReply: dto.finalReply,
@@ -197,6 +208,11 @@ export class TicketsService {
         agent: { select: { id: true, name: true, email: true } },
       },
     });
+
+    // Broadcast ticket resolved event to ticket room and agent channel
+    this.realtimeGateway.notifyTicketResolved(resolvedTicket);
+
+    return resolvedTicket;
   }
 
   async generateCopilotDraft(id: string) {
@@ -207,7 +223,6 @@ export class TicketsService {
 
     const copilotResult = await this.aiService.generateCopilotDraft(ticket.title, ticket.description);
 
-    // Store AI draft reply and citations on ticket record
     await this.prisma.ticket.update({
       where: { id },
       data: {
