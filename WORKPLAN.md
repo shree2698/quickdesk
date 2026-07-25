@@ -30,7 +30,7 @@
 | Phase | Total | ✅ Done | 🔄 Active | ⬜ Pending | ⏸️ Blocked |
 |-------|:-----:|:------:|:---------:|:---------:|:----------:|
 | **Phase 0: Project Setup** | 5 | 5 | 0 | 0 | 0 |
-| **Phase 1A: Database & Prisma** | 5 | 0 | 0 | 5 | 0 |
+| **Phase 1A: Database & Prisma** | 5 | 5 | 0 | 0 | 0 |
 | **Phase 1B: Auth Module** | 7 | 0 | 0 | 7 | 0 |
 | **Phase 1C: Tickets Module** | 8 | 0 | 0 | 8 | 0 |
 | **Phase 2A: Knowledge Base & RAG** | 7 | 0 | 0 | 7 | 0 |
@@ -41,7 +41,7 @@
 | **Phase 3D: Frontend — Agent Views** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 4A: Metrics & Analytics** | 3 | 0 | 0 | 3 | 0 |
 | **Phase 4B: Polish & Deliverables** | 6 | 0 | 0 | 6 | 0 |
-| **TOTAL** | **68** | **5** | **0** | **63** | **0** |
+| **TOTAL** | **68** | **10** | **0** | **58** | **0** |
 
 ---
 
@@ -66,11 +66,11 @@
 
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
-| T-06 | Define Prisma schema — `User` model with role enum (`EMPLOYEE`, `AGENT`, `ADMIN`) | Backend | ⬜ Not Started | T-02 | — | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L83-L90) |
-| T-07 | Define Prisma schema — `Ticket` model with status, category, priority enums and AI fields (`aiCategory`, `aiPriority`, `aiDraftReply`, `finalReply`, `ragCitations`) | Backend | ⬜ Not Started | T-06 | — | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L92-L102) |
-| T-08 | Define Prisma schema — `Message` model (ticket chat) | Backend | ⬜ Not Started | T-07 | — | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L104-L110) |
-| T-09 | Define Prisma schema — `AuditLog` model + `KnowledgeArticle` & `KnowledgeArticleChunk` models (with pgvector) | Backend | ⬜ Not Started | T-07 | — | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L112-L133) |
-| T-10 | Create `PrismaModule` & `PrismaService` as global NestJS module | Backend | ⬜ Not Started | T-06 | — | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L55) |
+| T-06 | Define Prisma schema — `User` model with role enum (`EMPLOYEE`, `AGENT`, `ADMIN`) | Backend | ✅ Done | T-02 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L83-L90) |
+| T-07 | Define Prisma schema — `Ticket` model with status, category, priority enums and AI fields (`aiCategory`, `aiPriority`, `aiDraftReply`, `finalReply`, `ragCitations`) | Backend | ✅ Done | T-06 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L92-L102) |
+| T-08 | Define Prisma schema — `Message` model (ticket chat) | Backend | ✅ Done | T-07 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L104-L110) |
+| T-09 | Define Prisma schema — `AuditLog` model + `KnowledgeArticle` & `KnowledgeArticleChunk` models (with pgvector) | Backend | ✅ Done | T-07 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L112-L133) |
+| T-10 | Create `PrismaModule` & `PrismaService` as global NestJS module | Backend | ✅ Done | T-06 | 2026-07-25 | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L55) |
 
 ---
 
@@ -409,7 +409,11 @@ graph TD
 | 2026-07-24 | T-03 | ⬜ → ✅ | Next.js frontend scaffolded |
 | 2026-07-24 | T-04 | ⬜ → ✅ | Root .env created with DB, JWT, Gemini, port configs |
 | 2026-07-24 | T-05 | ⬜ → ✅ | 5 KB articles written (vpn, password, leave, expense, laptop) |
-| | | | |
+| 2026-07-25 | T-06 | ⬜ → ✅ | Prisma schema User model defined with Role enum |
+| 2026-07-25 | T-07 | ⬜ → ✅ | Prisma schema Ticket model defined with Status/Category/Priority enums & AI fields |
+| 2026-07-25 | T-08 | ⬜ → ✅ | Prisma schema Message model defined |
+| 2026-07-25 | T-09 | ⬜ → ✅ | Prisma schema AuditLog, KnowledgeArticle & Chunk (pgvector) models defined |
+| 2026-07-25 | T-10 | ⬜ → ✅ | Global PrismaModule & PrismaService created in NestJS |
 
 ---
 
@@ -425,4 +429,4 @@ graph TD
 6. After completing → update status to `✅ Done`, add date, append to Change Log
 7. Update the **Progress Summary** counts
 
-**Current next task:** `T-06` (Define Prisma schema — User model)
+**Current next task:** `T-11` (Create AuthModule with AuthController and AuthService)

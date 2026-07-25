@@ -1,14 +1,128 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector")]
+}
+
+enum Role {
+  EMPLOYEE
+  AGENT
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketCategory {
+  IT
+  HR
+  FINANCE
+  GENERAL
+  OTHER
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         Role       @default(EMPLOYEE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  submittedTickets Ticket[]   @relation("SubmittedTickets")
+  resolvedTickets  Ticket[]   @relation("ResolvedTickets")
+  messages         Message[]
+  auditLogs        AuditLog[]
+}
+
+model Ticket {
+  id                 String          @id @default(uuid())
+  title              String
+  description        String
+  attachmentFilename String?
+  status             TicketStatus    @default(OPEN)
+  category           TicketCategory  @default(GENERAL)
+  priority           TicketPriority  @default(LOW)
+  aiCategory         TicketCategory?
+  aiPriority         TicketPriority?
+  aiDraftReply       String?
+  finalReply         String?
+  ragCitations       String[]
+  employeeId         String
+  agentId            String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  resolvedAt         DateTime?
+
+  employee User       @relation("SubmittedTickets", fields: [employeeId], references: [id], onDelete: Cascade)
+  agent    User?      @relation("ResolvedTickets", fields: [agentId], references: [id], onDelete: SetNull)
+  messages Message[]
+  auditLogs AuditLog[]
+
+  @@index([status, priority], name: "idx_tickets_status_priority")
+  @@index([employeeId], name: "idx_tickets_employeeId")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  text      String
+  ticketId  String
+  senderId  String
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt], name: "idx_messages_ticketId_createdAt")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  ticketId     String
+  changedById  String
+  field        String
+  oldValue     String?
+  newValue     String?
+  createdAt    DateTime @default(now())
+
+  ticket    Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  changedBy User   @relation(fields: [changedById], references: [id], onDelete: Cascade)
+}
+
+model KnowledgeArticle {
+  id        String                  @id @default(uuid())
+  title     String
+  filename  String                  @unique
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  chunks    KnowledgeArticleChunk[]
+}
+
+model KnowledgeArticleChunk {
+  id         String   @id @default(uuid())
+  articleId  String
+  content    String
+  embedding  Unsupported("vector(768)")?
+  chunkIndex Int
+
+  article KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
 }
