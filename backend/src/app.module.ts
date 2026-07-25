@@ -7,9 +7,17 @@ import { AuthModule } from './auth/auth.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { AiModule } from './ai/ai.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, TicketsModule, AiModule, RealtimeModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    TicketsModule,
+    AiModule,
+    RealtimeModule,
+    MetricsModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
