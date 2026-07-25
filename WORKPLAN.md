@@ -31,7 +31,7 @@
 |-------|:-----:|:------:|:---------:|:---------:|:----------:|
 | **Phase 0: Project Setup** | 5 | 5 | 0 | 0 | 0 |
 | **Phase 1A: Database & Prisma** | 5 | 5 | 0 | 0 | 0 |
-| **Phase 1B: Auth Module** | 7 | 0 | 0 | 7 | 0 |
+| **Phase 1B: Auth Module** | 7 | 7 | 0 | 0 | 0 |
 | **Phase 1C: Tickets Module** | 8 | 0 | 0 | 8 | 0 |
 | **Phase 2A: Knowledge Base & RAG** | 7 | 0 | 0 | 7 | 0 |
 | **Phase 2B: AI Classification** | 5 | 0 | 0 | 5 | 0 |
@@ -41,7 +41,7 @@
 | **Phase 3D: Frontend — Agent Views** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 4A: Metrics & Analytics** | 3 | 0 | 0 | 3 | 0 |
 | **Phase 4B: Polish & Deliverables** | 6 | 0 | 0 | 6 | 0 |
-| **TOTAL** | **68** | **10** | **0** | **58** | **0** |
+| **TOTAL** | **68** | **17** | **0** | **51** | **0** |
 
 ---
 
@@ -81,13 +81,13 @@
 
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
-| T-11 | Create `AuthModule` with `AuthController` and `AuthService` | Backend | ⬜ Not Started | T-10 | — | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L7-L31) |
-| T-12 | Implement `POST /api/auth/register` — hash password with bcrypt (10 salt rounds), create user, return user object | Backend | ⬜ Not Started | T-11 | — | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L9-L27) |
-| T-13 | Implement `POST /api/auth/login` — verify bcrypt hash, sign JWT (HS256, 15min access + 7d refresh), return token + user | Backend | ⬜ Not Started | T-11 | — | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L29-L49) |
-| T-14 | Implement `JwtStrategy` (Passport) — extract & verify Bearer token, attach user to request | Backend | ⬜ Not Started | T-13 | — | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L87-L98) |
-| T-15 | Implement `JwtAuthGuard` — global guard that validates JWT on protected routes | Backend | ⬜ Not Started | T-14 | — | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L97) |
-| T-16 | Implement `RolesGuard` + `@Roles()` decorator — check `req.user.role` against endpoint metadata | Backend | ⬜ Not Started | T-15 | — | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L88-L99) |
-| T-17 | Implement `GET /api/auth/me` — return current user profile from JWT | Backend | ⬜ Not Started | T-15 | — | [AGENT.md](file:///E:/ME/quickdesk/AGENT.md) |
+| T-11 | Create `AuthModule` with `AuthController` and `AuthService` | Backend | ✅ Done | T-10 | 2026-07-25 | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L7-L31) |
+| T-12 | Implement `POST /api/auth/register` — hash password with bcrypt (10 salt rounds), create user, return user object | Backend | ✅ Done | T-11 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L9-L27) |
+| T-13 | Implement `POST /api/auth/login` — verify bcrypt hash, sign JWT (HS256, 15min access + 7d refresh), return token + user | Backend | ✅ Done | T-11 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L29-L49) |
+| T-14 | Implement `JwtStrategy` (Passport) — extract & verify Bearer token, attach user to request | Backend | ✅ Done | T-13 | 2026-07-25 | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L87-L98) |
+| T-15 | Implement `JwtAuthGuard` — global guard that validates JWT on protected routes | Backend | ✅ Done | T-14 | 2026-07-25 | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L97) |
+| T-16 | Implement `RolesGuard` + `@Roles()` decorator — check `req.user.role` against endpoint metadata | Backend | ✅ Done | T-15 | 2026-07-25 | [06-auth.md](file:///E:/ME/quickdesk/docs/06-auth.md#L88-L99) |
+| T-17 | Implement `GET /api/auth/me` — return current user profile from JWT | Backend | ✅ Done | T-15 | 2026-07-25 | [AGENT.md](file:///E:/ME/quickdesk/AGENT.md) |
 
 ---
 
@@ -414,6 +414,13 @@ graph TD
 | 2026-07-25 | T-08 | ⬜ → ✅ | Prisma schema Message model defined |
 | 2026-07-25 | T-09 | ⬜ → ✅ | Prisma schema AuditLog, KnowledgeArticle & Chunk (pgvector) models defined |
 | 2026-07-25 | T-10 | ⬜ → ✅ | Global PrismaModule & PrismaService created in NestJS |
+| 2026-07-25 | T-11 | ⬜ → ✅ | AuthModule created with AuthController and AuthService |
+| 2026-07-25 | T-12 | ⬜ → ✅ | POST /api/auth/register implemented with bcrypt password hashing |
+| 2026-07-25 | T-13 | ⬜ → ✅ | POST /api/auth/login implemented with bcrypt compare and JWT signing |
+| 2026-07-25 | T-14 | ⬜ → ✅ | JwtStrategy implemented for Bearer token extraction and user payload validation |
+| 2026-07-25 | T-15 | ⬜ → ✅ | JwtAuthGuard implemented to protect private endpoints |
+| 2026-07-25 | T-16 | ⬜ → ✅ | RolesGuard and @Roles() decorator implemented for backend RBAC enforcement |
+| 2026-07-25 | T-17 | ⬜ → ✅ | GET /api/auth/me implemented to return authenticated user profile |
 
 ---
 
@@ -429,4 +436,4 @@ graph TD
 6. After completing → update status to `✅ Done`, add date, append to Change Log
 7. Update the **Progress Summary** counts
 
-**Current next task:** `T-11` (Create AuthModule with AuthController and AuthService)
+**Current next task:** `T-18` (Create TicketsModule with TicketsController and TicketsService)
