@@ -32,7 +32,7 @@
 | **Phase 0: Project Setup** | 5 | 5 | 0 | 0 | 0 |
 | **Phase 1A: Database & Prisma** | 5 | 5 | 0 | 0 | 0 |
 | **Phase 1B: Auth Module** | 7 | 7 | 0 | 0 | 0 |
-| **Phase 1C: Tickets Module** | 8 | 0 | 0 | 8 | 0 |
+| **Phase 1C: Tickets Module** | 8 | 8 | 0 | 0 | 0 |
 | **Phase 2A: Knowledge Base & RAG** | 7 | 0 | 0 | 7 | 0 |
 | **Phase 2B: AI Classification** | 5 | 0 | 0 | 5 | 0 |
 | **Phase 3A: Real-Time (Socket.io)** | 5 | 0 | 0 | 5 | 0 |
@@ -41,7 +41,7 @@
 | **Phase 3D: Frontend — Agent Views** | 6 | 0 | 0 | 6 | 0 |
 | **Phase 4A: Metrics & Analytics** | 3 | 0 | 0 | 3 | 0 |
 | **Phase 4B: Polish & Deliverables** | 6 | 1 | 0 | 5 | 0 |
-| **TOTAL** | **68** | **18** | **0** | **50** | **0** |
+| **TOTAL** | **68** | **26** | **0** | **42** | **0** |
 
 ---
 
@@ -98,14 +98,14 @@
 
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
-| T-18 | Create `TicketsModule` with `TicketsController` and `TicketsService` | Backend | ⬜ Not Started | T-10, T-16 | — | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L52) |
-| T-19 | Implement `POST /api/tickets` — create ticket (employee only), store title, description, attachment filename | Backend | ⬜ Not Started | T-18 | — | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L75-L97) |
-| T-20 | Implement `GET /api/tickets` — employees see own tickets only, agents see all with filters (status, category, priority) + search on title | Backend | ⬜ Not Started | T-18 | — | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L55-L73) |
-| T-21 | Implement `GET /api/tickets/:id` — ticket detail with ownership check (employee can view own only) | Backend | ⬜ Not Started | T-20 | — | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md) |
-| T-22 | Implement `PATCH /api/tickets/:id/category` and `PATCH /api/tickets/:id/priority` — agent overrides AI suggestion | Backend | ⬜ Not Started | T-21 | — | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
-| T-23 | Implement audit log creation — log (who, when, from_value, to_value) on every category/priority override | Backend | ⬜ Not Started | T-22 | — | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L125-L133) |
-| T-24 | Implement `POST /api/tickets/:id/reply` — store final reply, mark ticket as RESOLVED, keep AI draft + final reply | Backend | ⬜ Not Started | T-21 | — | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
-| T-25 | Implement `GET /api/tickets/:id/audit-log` — return override history for a ticket (agent only) | Backend | ⬜ Not Started | T-23 | — | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
+| T-18 | Create `TicketsModule` with `TicketsController` and `TicketsService` | Backend | ✅ Done | T-10, T-16 | 2026-07-25 | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L52) |
+| T-19 | Implement `POST /api/tickets` — create ticket (employee only), store title, description, attachment filename | Backend | ✅ Done | T-18 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L75-L97) |
+| T-20 | Implement `GET /api/tickets` — employees see own tickets only, agents see all with filters (status, category, priority) + search on title | Backend | ✅ Done | T-18 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L55-L73) |
+| T-21 | Implement `GET /api/tickets/:id` — ticket detail with ownership check (employee can view own only) | Backend | ✅ Done | T-20 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md) |
+| T-22 | Implement `PATCH /api/tickets/:id/category` and `PATCH /api/tickets/:id/priority` — agent overrides AI suggestion | Backend | ✅ Done | T-21 | 2026-07-25 | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
+| T-23 | Implement audit log creation — log (who, when, from_value, to_value) on every category/priority override | Backend | ✅ Done | T-22 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L125-L133) |
+| T-24 | Implement `POST /api/tickets/:id/reply` — store final reply, mark ticket as RESOLVED, keep AI draft + final reply | Backend | ✅ Done | T-21 | 2026-07-25 | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
+| T-25 | Implement `GET /api/tickets/:id/audit-log` — return override history for a ticket (agent only) | Backend | ✅ Done | T-23 | 2026-07-25 | [REQUIREMENTS.md](file:///E:/ME/quickdesk/REQUIREMENTS.md) |
 
 ---
 
@@ -422,6 +422,14 @@ graph TD
 | 2026-07-25 | T-16 | ⬜ → ✅ | RolesGuard and @Roles() decorator implemented for backend RBAC enforcement |
 | 2026-07-25 | T-17 | ⬜ → ✅ | GET /api/auth/me implemented to return authenticated user profile |
 | 2026-07-25 | T-64 | ⬜ → ✅ | Created root .env.example, backend .env.example, and frontend .env.local.example templates |
+| 2026-07-25 | T-18 | ⬜ → ✅ | TicketsModule, TicketsController, and TicketsService created |
+| 2026-07-25 | T-19 | ⬜ → ✅ | POST /api/tickets implemented for ticket submission |
+| 2026-07-25 | T-20 | ⬜ → ✅ | GET /api/tickets implemented with role scoping, filtering, and search |
+| 2026-07-25 | T-21 | ⬜ → ✅ | GET /api/tickets/:id implemented with employee ownership enforcement |
+| 2026-07-25 | T-22 | ⬜ → ✅ | PATCH /api/tickets/:id/category and /priority implemented for agent overrides |
+| 2026-07-25 | T-23 | ⬜ → ✅ | AuditLog creation logic integrated into category & priority overrides |
+| 2026-07-25 | T-24 | ⬜ → ✅ | POST /api/tickets/:id/reply implemented to store response and set status to RESOLVED |
+| 2026-07-25 | T-25 | ⬜ → ✅ | GET /api/tickets/:id/audit-log implemented to retrieve override history |
 
 ---
 
@@ -437,4 +445,4 @@ graph TD
 6. After completing → update status to `✅ Done`, add date, append to Change Log
 7. Update the **Progress Summary** counts
 
-**Current next task:** `T-18` (Create TicketsModule with TicketsController and TicketsService)
+**Current next task:** `T-26` (Create AiModule with RagService and AiService)
