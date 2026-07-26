@@ -43,6 +43,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       client.data.user = decoded;
       this.logger.log(`Client connected: ${client.id} (User: ${decoded.email}, Role: ${decoded.role})`);
 
+      // Join a personal room for the user to receive targeted updates
+      client.join(`user-${decoded.sub}`);
+
       // If user is Agent or Admin, join channel-agents room for queue broadcasts
       if (decoded.role === Role.AGENT || decoded.role === Role.ADMIN) {
         client.join('channel-agents');
@@ -160,6 +163,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
    */
   notifyTicketResolved(ticket: any) {
     this.server.to(`ticket-${ticket.id}`).emit('ticket:resolved', ticket);
+    this.server.to(`user-${ticket.employeeId}`).emit('ticket:resolved', ticket);
     this.server.to('channel-agents').emit('ticket_updated', {
       ticketId: ticket.id,
       status: ticket.status,

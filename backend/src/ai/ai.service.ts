@@ -95,7 +95,8 @@ ${ticketDescription}
 [Relevant Internal Guides]
 ${contextText}
 
-Write a clear, polite, step-by-step response draft.`;
+Write a clear, polite, step-by-step response draft. 
+IMPORTANT: If the provided Internal Guides are empty or do not contain the necessary information to answer the ticket, DO NOT hallucinate an answer. Instead, explicitly state that no relevant knowledge base article was found and suggest escalating or asking for more details.`;
 
     let suggestion = '';
     if (this.ai) {

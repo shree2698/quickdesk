@@ -176,6 +176,12 @@ Seed data creates pre-configured accounts with bcrypt-hashed passwords for insta
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### ⚡ Real-Time Technology Choice: Why Socket.io?
+We explicitly chose **Socket.io** over native WebSockets or Server-Sent Events (SSE) for the following reasons:
+1. **Built-in Rooms and Broadcasting**: Socket.io natively supports "rooms" (e.g., `ticket-{id}`, `channel-agents`), making it trivial to securely push updates only to specific stakeholders without manually managing connection pools.
+2. **Auto-Reconnection & Reliability**: It provides built-in fallback polling, automatic reconnection with exponential backoff, and event buffering if the connection briefly drops.
+3. **Scalability**: By utilizing the `@socket.io/redis-adapter` out of the box, we can seamlessly horizontally scale the WebSocket gateway across multiple server instances in production.
+
 ### Core Technologies:
 - **Frontend**: Next.js 16 (App Router), React 19, Vanilla CSS Design Tokens, Lucide Icons, Axios, Socket.io Client.
 - **Backend**: NestJS 11, TypeScript, Passport.js JWT Auth, Socket.io WebSockets, Swagger OpenAPI.
