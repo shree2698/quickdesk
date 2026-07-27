@@ -12,7 +12,7 @@ export class VectorStoreService {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     this.embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey,
-      modelName: 'text-embedding-004',
+      model: 'gemini-embedding-001',
     });
   }
 
@@ -60,7 +60,8 @@ export class VectorStoreService {
 
       for (let j = 0; j < batch.length; j++) {
         const doc = batch[j];
-        const vector = vectors ? vectors[j] : null;
+        const rawVector = vectors ? vectors[j] : null;
+        const vector = rawVector ? rawVector.slice(0, 768) : null;
         const chunkIndex = i + j;
 
         // Enrich metadata with totalChunks for traceability
@@ -114,7 +115,8 @@ export class VectorStoreService {
   }
 
   async similaritySearch(query: string, k = 4): Promise<Document[]> {
-    const queryVector = await this.embeddings.embedQuery(query);
+    const fullQueryVector = await this.embeddings.embedQuery(query);
+    const queryVector = fullQueryVector.slice(0, 768);
     const vectorSql = `[${queryVector.join(',')}]`;
 
     const results: Array<{

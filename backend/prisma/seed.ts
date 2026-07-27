@@ -43,7 +43,7 @@ function createEmbeddings(): GoogleGenerativeAIEmbeddings | null {
   }
   return new GoogleGenerativeAIEmbeddings({
     apiKey,
-    modelName: 'text-embedding-004',
+    model: 'gemini-embedding-001',
   });
 }
 
@@ -186,74 +186,52 @@ async function main() {
         where: { knowledgeBaseId: article.id },
       });
 
-      // Process chunks in batches of 10 (matching VectorStoreService batch size)
-      const batchSize = 10;
       let embeddedCount = 0;
 
-      for (let batchStart = 0; batchStart < docs.length; batchStart += batchSize) {
-        const batch = docs.slice(batchStart, batchStart + batchSize);
-        const texts = batch.map((doc) => doc.pageContent);
+      for (let j = 0; j < docs.length; j++) {
+        const chunkText = docs[j].pageContent;
+        let vector: number[] | null = null;
 
-        // Generate embeddings for the entire batch at once
-        let vectors: number[][] | null = null;
         if (embeddings) {
           try {
-            vectors = await embeddings.embedDocuments(texts);
-          } catch (e: any) {
-            console.warn(`   ⚠️  Embedding batch failed for ${file} (batch ${batchStart}): ${e.message}`);
-            // Rate limit back-off
-            await sleep(2000);
-            try {
-              vectors = await embeddings.embedDocuments(texts);
-            } catch (retryErr: any) {
-              console.warn(`   ⚠️  Retry also failed: ${retryErr.message}`);
+            const rawVectors = await embeddings.embedDocuments([chunkText]);
+            if (rawVectors?.[0]?.length) {
+              vector = rawVectors[0].slice(0, 768);
             }
+          } catch (e: any) {
+            console.warn(`   ⚠️  Embedding chunk ${j} failed for ${file}: ${e.message}`);
           }
         }
 
-        for (let j = 0; j < batch.length; j++) {
-          const chunkIndex = batchStart + j;
-          const chunkText = batch[j].pageContent;
-          const vector = vectors ? vectors[j] : null;
+        const chunkMetadata = {
+          sourceTitle: title,
+          sourceFile: file,
+          knowledgeBaseId: article.id,
+          chunkIndex: j,
+          totalChunks: docs.length,
+        };
 
-          // Build rich metadata for each chunk (matches upload processor behavior)
-          const chunkMetadata = {
-            sourceTitle: title,
-            sourceFile: file,
-            knowledgeBaseId: article.id,
-            chunkIndex,
-            totalChunks: docs.length,
-          };
-
-          if (vector && vector.length > 0) {
-            // Use raw SQL to insert with vector embedding in one shot
-            const vectorStr = `[${vector.join(',')}]`;
-            await prisma.$executeRawUnsafe(
-              `INSERT INTO knowledge_base_chunks (id, "knowledgeBaseId", "chunkIndex", content, metadata, embedding)
-               VALUES (gen_random_uuid(), $1, $2, $3, $4::jsonb, $5::vector)`,
-              article.id,
-              chunkIndex,
-              chunkText,
-              JSON.stringify(chunkMetadata),
-              vectorStr,
-            );
-            embeddedCount++;
-          } else {
-            // Insert without embedding (Prisma ORM) — still store metadata
-            await prisma.knowledgeBaseChunk.create({
-              data: {
-                knowledgeBaseId: article.id,
-                chunkIndex,
-                content: chunkText,
-                metadata: chunkMetadata,
-              },
-            });
-          }
-        }
-
-        // Small delay between batches to avoid hitting API rate limits
-        if (vectors && batchStart + batchSize < docs.length) {
-          await sleep(500);
+        if (vector && vector.length > 0) {
+          const vectorStr = `[${vector.join(',')}]`;
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO knowledge_base_chunks (id, "knowledgeBaseId", "chunkIndex", content, metadata, embedding)
+             VALUES (gen_random_uuid(), $1, $2, $3, $4::jsonb, $5::vector)`,
+            article.id,
+            j,
+            chunkText,
+            JSON.stringify(chunkMetadata),
+            vectorStr,
+          );
+          embeddedCount++;
+        } else {
+          await prisma.knowledgeBaseChunk.create({
+            data: {
+              knowledgeBaseId: article.id,
+              chunkIndex: j,
+              content: chunkText,
+              metadata: chunkMetadata,
+            },
+          });
         }
       }
 
