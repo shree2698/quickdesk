@@ -190,18 +190,23 @@ export class TicketsService {
     return updatedTicket;
   }
 
-  async sendReply(id: string, agentId: string, dto: SendReplyDto) {
+  async sendReply(id: string, userId: string, role: Role, dto: SendReplyDto) {
     const ticket = await this.prisma.ticket.findUnique({ where: { id } });
     if (!ticket) {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
 
-    const updateData: any = {
-      agentId,
-    };
+    if (role === Role.EMPLOYEE && ticket.employeeId !== userId) {
+      throw new ForbiddenException('You do not have permission to reply to this ticket');
+    }
 
-    if (ticket.status === TicketStatus.OPEN) {
-      updateData.status = TicketStatus.IN_PROGRESS;
+    const updateData: any = {};
+
+    if (role === Role.AGENT || role === Role.ADMIN) {
+      updateData.agentId = userId;
+      if (ticket.status === TicketStatus.OPEN) {
+        updateData.status = TicketStatus.IN_PROGRESS;
+      }
     }
 
     if (dto.ragCitations && dto.ragCitations.length > 0) {
@@ -212,14 +217,14 @@ export class TicketsService {
     await this.prisma.message.create({
       data: {
         ticketId: id,
-        senderId: agentId,
+        senderId: userId,
         text: dto.finalReply,
       },
     });
 
     const updatedTicket = await this.prisma.ticket.update({
       where: { id },
-      data: updateData,
+      data: Object.keys(updateData).length > 0 ? updateData : { updatedAt: new Date() },
       include: {
         employee: { select: { id: true, name: true, email: true } },
         agent: { select: { id: true, name: true, email: true } },

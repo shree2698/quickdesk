@@ -91,16 +91,17 @@ export class TicketsController {
     return this.ticketsService.updatePriority(id, agentId, dto);
   }
 
-  @ApiOperation({ summary: 'Send reply to ticket (Agent/Admin only)' })
-  @ApiResponse({ status: 200, description: 'Reply saved as message and ticket status set to IN_PROGRESS' })
-  @Roles(Role.AGENT, Role.ADMIN)
+  @ApiOperation({ summary: 'Send reply/message to ticket' })
+  @ApiResponse({ status: 200, description: 'Reply saved as message in ticket conversation' })
+  @Roles(Role.EMPLOYEE, Role.AGENT, Role.ADMIN)
   @Post(':id/reply')
   async sendReply(
     @Param('id') id: string,
-    @GetUser('id') agentId: string,
+    @GetUser('id') userId: string,
+    @GetUser('role') role: Role,
     @Body() dto: SendReplyDto,
   ) {
-    return this.ticketsService.sendReply(id, agentId, dto);
+    return this.ticketsService.sendReply(id, userId, role, dto);
   }
 
   @ApiOperation({ summary: 'Resolve ticket (Agent/Admin only)' })

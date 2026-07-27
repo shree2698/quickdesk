@@ -14,6 +14,7 @@ import {
   ChevronUp,
   FileText,
   User,
+  Send,
 } from 'lucide-react';
 import Link from 'next/link';
 import { MarkdownViewer } from '@/components/ui/MarkdownViewer';
@@ -24,6 +25,8 @@ export default function MyTicketsPage() {
   const [error, setError] = useState('');
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
   const [detailedTickets, setDetailedTickets] = useState<Record<string, any>>({});
+  const [replyInput, setReplyInput] = useState<Record<string, string>>({});
+  const [replyLoading, setReplyLoading] = useState<Record<string, boolean>>({});
   const { socket } = useSocket();
 
   const fetchTickets = async () => {
@@ -54,6 +57,24 @@ export default function MyTicketsPage() {
       if (!detailedTickets[ticketId]) {
         fetchTicketDetails(ticketId);
       }
+    }
+  };
+
+  const handleSendEmployeeReply = async (ticketId: string) => {
+    const text = replyInput[ticketId];
+    if (!text || !text.trim()) return;
+
+    setReplyLoading((prev) => ({ ...prev, [ticketId]: true }));
+    try {
+      const res = await api.post(`/tickets/${ticketId}/reply`, {
+        finalReply: text,
+      });
+      setDetailedTickets((prev) => ({ ...prev, [ticketId]: res.data }));
+      setReplyInput((prev) => ({ ...prev, [ticketId]: '' }));
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send reply message');
+    } finally {
+      setReplyLoading((prev) => ({ ...prev, [ticketId]: false }));
     }
   };
 
@@ -98,7 +119,7 @@ export default function MyTicketsPage() {
             My Tickets
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Track and view live resolution updates and agent replies for your tickets.
+            Track and view live resolution updates and send replies to the support team.
           </p>
         </div>
 
@@ -228,7 +249,7 @@ export default function MyTicketsPage() {
                   </div>
                 )}
 
-                {/* Expandable Full Chat Message History */}
+                {/* Expandable Full Chat Message History & Employee Reply Box */}
                 {isExpanded && (
                   <div className="pt-4 border-t border-slate-200 space-y-4">
                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
@@ -238,7 +259,7 @@ export default function MyTicketsPage() {
 
                     {messagesList.length === 0 && !ticket.finalReply ? (
                       <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">
-                        An agent is reviewing your ticket. Replies will appear here in real-time.
+                        An agent is reviewing your ticket. You can type a message below to reach out.
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -247,20 +268,49 @@ export default function MyTicketsPage() {
                             key={msg.id}
                             className={`p-4 rounded-xl border text-sm space-y-1.5 shadow-2xs ${
                               msg.sender?.role === 'EMPLOYEE'
-                                ? 'bg-blue-50/60 border-blue-200 text-slate-900 ml-6'
+                                ? 'bg-blue-50/70 border-blue-200 text-slate-900 ml-6'
                                 : 'bg-slate-50 border-slate-200 text-slate-900 mr-6'
                             }`}
                           >
                             <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-200/60 pb-1.5 font-medium">
                               <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
                                 <User className="w-3.5 h-3.5 text-blue-600" />
-                                {msg.sender?.name || 'Support Agent'} ({msg.sender?.role || 'AGENT'})
+                                {msg.sender?.name || 'User'} ({msg.sender?.role || 'EMPLOYEE'})
                               </span>
                               <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
                             </div>
                             <MarkdownViewer content={msg.text} className="text-slate-800 text-sm" />
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Employee Reply Input Form */}
+                    {ticket.status !== 'RESOLVED' && (
+                      <div className="pt-3 flex gap-2">
+                        <input
+                          type="text"
+                          value={replyInput[ticket.id] || ''}
+                          onChange={(e) =>
+                            setReplyInput((prev) => ({ ...prev, [ticket.id]: e.target.value }))
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendEmployeeReply(ticket.id);
+                            }
+                          }}
+                          placeholder="Type a reply or follow-up message to the support team..."
+                          className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-sm shadow-2xs"
+                        />
+                        <button
+                          onClick={() => handleSendEmployeeReply(ticket.id)}
+                          disabled={replyLoading[ticket.id] || !(replyInput[ticket.id] || '').trim()}
+                          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          {replyLoading[ticket.id] ? 'Sending...' : 'Send Reply'}
+                        </button>
                       </div>
                     )}
                   </div>
