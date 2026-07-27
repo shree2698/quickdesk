@@ -43,7 +43,7 @@ function createEmbeddings(): GoogleGenerativeAIEmbeddings | null {
   }
   return new GoogleGenerativeAIEmbeddings({
     apiKey,
-    model: 'gemini-embedding-001',
+    model: process.env.EMBEDDING_MODEL || 'gemini-embedding-001',
   });
 }
 

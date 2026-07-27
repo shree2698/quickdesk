@@ -1,22 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { Embeddings } from '@langchain/core/embeddings';
 import { Document } from '@langchain/core/documents';
 import { PrismaService } from '../prisma/prisma.service';
+import { LlmFactory } from '../ai/llm-factory';
 
 @Injectable()
 export class VectorStoreService {
   private readonly logger = new Logger(VectorStoreService.name);
-  private embeddings: GoogleGenerativeAIEmbeddings;
+  private embeddings: Embeddings;
 
   constructor(private readonly prisma: PrismaService) {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    this.embeddings = new GoogleGenerativeAIEmbeddings({
-      apiKey,
-      model: 'gemini-embedding-001',
-    });
+    this.embeddings = LlmFactory.createEmbeddings();
   }
 
-  getEmbeddingsInstance(): GoogleGenerativeAIEmbeddings {
+  getEmbeddingsInstance(): Embeddings {
     return this.embeddings;
   }
 

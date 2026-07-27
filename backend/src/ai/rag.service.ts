@@ -1,23 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { VectorStoreService } from '../knowledge/vector-store.service';
 import { Document } from '@langchain/core/documents';
+import { LlmFactory } from './llm-factory';
 
 @Injectable()
 export class RagService {
   private readonly logger = new Logger(RagService.name);
-  private model: ChatGoogleGenerativeAI;
+  private model: BaseChatModel;
 
   constructor(private readonly vectorStoreService: VectorStoreService) {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    this.model = new ChatGoogleGenerativeAI({
-      apiKey,
-      model: 'gemini-1.5-flash',
-      temperature: 0.2,
-    });
+    this.model = LlmFactory.createChatModel(0.2);
   }
 
   async answerQuestion(question: string): Promise<{ answer: string; sources: any[] }> {

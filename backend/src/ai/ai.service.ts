@@ -1,52 +1,51 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenAI } from '@google/genai';
 import { TicketCategory, TicketPriority } from '@prisma/client';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RagService } from './rag.service';
+import { LlmFactory } from './llm-factory';
 
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private ai: GoogleGenAI | null = null;
+  private model: BaseChatModel;
 
   constructor(private ragService: RagService) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey) {
-      this.ai = new GoogleGenAI({ apiKey });
-    }
+    this.model = LlmFactory.createChatModel(0.1);
   }
 
   /**
    * Predicts ticket category (IT | HR | FINANCE | GENERAL | OTHER) and priority (LOW | MEDIUM | HIGH | URGENT).
+   * Uses LangChain LCEL chain with dynamic model from env.
    */
-  async classifyTicket(title: string, description: string): Promise<{
+  async classifyTicket(
+    title: string,
+    description: string,
+  ): Promise<{
     category: TicketCategory;
     priority: TicketPriority;
   }> {
-    if (!this.ai) {
-      return { category: TicketCategory.GENERAL, priority: TicketPriority.LOW };
-    }
-
-    const prompt = `Classify the following support ticket into a Category and Priority.
+    const promptTemplate = PromptTemplate.fromTemplate(`
+Classify the following support ticket into a Category and Priority.
 
 Categories allowed: IT, HR, FINANCE, GENERAL, OTHER
 Priorities allowed: LOW, MEDIUM, HIGH, URGENT
 
-Ticket Title: "${title}"
-Ticket Description: "${description}"
+Ticket Title: "{title}"
+Ticket Description: "{description}"
 
 Respond ONLY in valid JSON format:
-{
+{{
   "category": "IT | HR | FINANCE | GENERAL | OTHER",
   "priority": "LOW | MEDIUM | HIGH | URGENT"
-}`;
+}}`);
+
+    const chain = promptTemplate.pipe(this.model).pipe(new StringOutputParser());
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: prompt,
-      });
-
-      const text = response.text?.trim() || '';
+      const output = await chain.invoke({ title, description });
+      const text = output?.trim() || '';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -64,7 +63,7 @@ Respond ONLY in valid JSON format:
 
         return { category, priority };
       }
-    } catch (err) {
+    } catch (err: any) {
       this.logger.warn(`AI classification failed, falling back to defaults: ${err.message}`);
     }
 
@@ -73,6 +72,7 @@ Respond ONLY in valid JSON format:
 
   /**
    * Generates a context-aware AI copilot response draft for agents using RAG over the Knowledge Base.
+   * Uses LangChain LCEL chain with dynamic model from env.
    */
   async generateCopilotDraft(ticketTitle: string, ticketDescription: string) {
     const query = `${ticketTitle} ${ticketDescription}`;
@@ -82,36 +82,35 @@ Respond ONLY in valid JSON format:
       .map((c) => `Source: ${c.title}\n"${c.content}"`)
       .join('\n\n');
 
-    const prompt = `You are QuickDesk Agent Copilot AI.
+    const promptTemplate = PromptTemplate.fromTemplate(`
+You are QuickDesk Agent Copilot AI.
 Generate a professional, helpful support reply draft for an agent responding to an employee ticket.
 Ground your reply strictly on the internal knowledge base articles provided below.
 
 [Ticket Title]
-${ticketTitle}
+{ticketTitle}
 
 [Ticket Description]
-${ticketDescription}
+{ticketDescription}
 
 [Relevant Internal Guides]
-${contextText}
+{contextText}
 
 Write a clear, polite, step-by-step response draft. 
-IMPORTANT: If the provided Internal Guides are empty or do not contain the necessary information to answer the ticket, DO NOT hallucinate an answer. Instead, explicitly state that no relevant knowledge base article was found and suggest escalating or asking for more details.`;
+IMPORTANT: If the provided Internal Guides are empty or do not contain the necessary information to answer the ticket, DO NOT hallucinate an answer. Instead, explicitly state that no relevant knowledge base article was found and suggest escalating or asking for more details.`);
+
+    const chain = promptTemplate.pipe(this.model).pipe(new StringOutputParser());
 
     let suggestion = '';
-    if (this.ai) {
-      try {
-        const response = await this.ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: prompt,
-        });
-        suggestion = response.text || '';
-      } catch (err) {
-        this.logger.error(`Copilot draft generation failed: ${err.message}`);
-        suggestion = `Hello,\n\nThank you for reaching out. Based on your report ("${ticketTitle}"), we are investigating the issue and will update you shortly.`;
-      }
-    } else {
-      suggestion = `Hello,\n\nThank you for reaching out regarding "${ticketTitle}". Here are the relevant guide details:\n\n${contextText}`;
+    try {
+      suggestion = await chain.invoke({
+        ticketTitle,
+        ticketDescription,
+        contextText: contextText || 'No relevant internal guides found.',
+      });
+    } catch (err: any) {
+      this.logger.error(`Copilot draft generation failed: ${err.message}`);
+      suggestion = `Hello,\n\nThank you for reaching out regarding "${ticketTitle}". We are looking into your issue and will get back to you shortly.`;
     }
 
     const citations = relevantChunks.sources.map((c) => ({
