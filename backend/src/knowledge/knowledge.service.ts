@@ -3,13 +3,16 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { DocumentConverterService } from './document-converter.service';
 import { KnowledgeBaseStatus, KnowledgeBase } from '@prisma/client';
+import * as path from 'path';
 
 @Injectable()
 export class KnowledgeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly documentConverterService: DocumentConverterService,
     @InjectQueue('knowledge-upload') private readonly uploadQueue: Queue,
     @InjectQueue('knowledge-reindex') private readonly reindexQueue: Queue,
     @InjectQueue('knowledge-delete') private readonly deleteQueue: Queue,
@@ -20,28 +23,49 @@ export class KnowledgeService {
     title: string | undefined,
     userId: string,
   ): Promise<KnowledgeBase> {
-    // 1. Store original file
-    const { storagePath, filename } = await this.storageService.saveFile(file);
+    // 1. Store temporary original file
+    const { storagePath: tempPath } = await this.storageService.saveFile(file);
 
-    // 2. Create Knowledge Base record with UPLOADED status
+    // 2. Convert document (PDF, DOCX, CSV, TXT) into Markdown (.md) content
+    const mdContent = await this.documentConverterService.convertToMarkdown(
+      tempPath,
+      file.mimetype,
+      file.originalname,
+    );
+
+    // 3. Save converted .md file to disk
+    const { storagePath, filename: mdFilename } = await this.storageService.saveTextAsMarkdown(
+      file.originalname,
+      mdContent,
+    );
+
+    // Clean up temporary original upload file if it was not already an .md file
+    if (path.extname(file.originalname).toLowerCase() !== '.md') {
+      await this.storageService.deleteFile(tempPath);
+    }
+
+    // 4. Create Knowledge Base record with .md parameters
     const docTitle = title || file.originalname;
+    const baseNameWithoutExt = path.parse(file.originalname).name;
+    const finalDisplayFilename = `${baseNameWithoutExt}.md`;
+
     const kb = await this.prisma.knowledgeBase.create({
       data: {
         title: docTitle,
-        filename: file.originalname,
-        mimeType: file.mimetype,
+        filename: finalDisplayFilename,
+        mimeType: 'text/markdown',
         storagePath,
         status: KnowledgeBaseStatus.UPLOADED,
         uploadedBy: userId,
       },
     });
 
-    // 3. Queue BullMQ job for background embedding & indexing
+    // 5. Queue BullMQ job for background embedding & indexing
     await this.uploadQueue.add('process-upload', {
       knowledgeBaseId: kb.id,
     });
 
-    // 4. Return success immediately
+    // 6. Return success immediately
     return kb;
   }
 

@@ -34,6 +34,25 @@ export class StorageService {
     }
   }
 
+  async saveTextAsMarkdown(
+    originalFilename: string,
+    markdownContent: string,
+  ): Promise<{ storagePath: string; filename: string }> {
+    await this.ensureUploadDir();
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(originalFilename);
+    const sanitizedBase = path.basename(originalFilename, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `${sanitizedBase}_${uniqueSuffix}.md`;
+    const storagePath = path.join(this.uploadDir, filename);
+
+    try {
+      await fs.writeFile(storagePath, markdownContent, 'utf-8');
+      return { storagePath, filename };
+    } catch (error) {
+      throw new InternalServerErrorException(`Failed to save Markdown file: ${error.message}`);
+    }
+  }
+
   async getFileStream(storagePath: string): Promise<Buffer> {
     return fs.readFile(storagePath);
   }
