@@ -1,14 +1,14 @@
 import { PrismaClient, Role, TicketStatus, TicketCategory, TicketPriority } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 
-// Load root .env file
+// ---------------------------------------------------------------------------
+// 1. Environment & Prisma setup
+// ---------------------------------------------------------------------------
 let currentDir = __dirname;
 while (currentDir) {
   const envPath = path.join(currentDir, '.env');
@@ -21,15 +21,40 @@ while (currentDir) {
   currentDir = parentDir;
 }
 
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+// Use the standard PrismaClient (driver adapters are optional at seed time)
+const prisma = new PrismaClient();
 
+// ---------------------------------------------------------------------------
+// 2. Embedding helper — matches runtime VectorStoreService config
+// ---------------------------------------------------------------------------
+function createEmbeddings(): GoogleGenerativeAIEmbeddings | null {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    console.warn('⚠️  GEMINI_API_KEY not set — embeddings will be skipped during seeding');
+    return null;
+  }
+  return new GoogleGenerativeAIEmbeddings({
+    apiKey,
+    modelName: 'text-embedding-004',
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 3. Rate-limited batch embedding (respects Gemini API quotas)
+// ---------------------------------------------------------------------------
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// ---------------------------------------------------------------------------
+// Main seed function
+// ---------------------------------------------------------------------------
 async function main() {
-  console.log('🌱 Starting QuickDesk comprehensive database seeding...');
+  console.log('🌱 Starting QuickDesk database seeding...\n');
 
-  // 1. Create Default Users (Bcrypt hashed passwords)
+  // =========================================================================
+  // STEP 1 — Seed default users
+  // =========================================================================
   const saltRounds = 10;
   const adminPassword = await bcrypt.hash('admin123', saltRounds);
   const agentPassword = await bcrypt.hash('agent123', saltRounds);
@@ -46,198 +71,360 @@ async function main() {
     },
   });
 
-  const agent = await prisma.user.upsert({
-    where: { email: 'agent@quickdesk.com' },
-    update: { passwordHash: agentPassword, name: 'Agent Smith', role: Role.AGENT },
+  const agentJohn = await prisma.user.upsert({
+    where: { email: 'agent.john@quickdesk.com' },
+    update: { passwordHash: agentPassword, name: 'Agent John', role: Role.AGENT },
     create: {
-      email: 'agent@quickdesk.com',
-      name: 'Agent Smith',
+      email: 'agent.john@quickdesk.com',
+      name: 'Agent John',
       passwordHash: agentPassword,
       role: Role.AGENT,
     },
   });
 
-  const agent2 = await prisma.user.upsert({
-    where: { email: 'sarah.agent@quickdesk.com' },
+  const agentSarah = await prisma.user.upsert({
+    where: { email: 'agent.sarah@quickdesk.com' },
     update: { passwordHash: agentPassword, name: 'Agent Sarah', role: Role.AGENT },
     create: {
-      email: 'sarah.agent@quickdesk.com',
+      email: 'agent.sarah@quickdesk.com',
       name: 'Agent Sarah',
       passwordHash: agentPassword,
       role: Role.AGENT,
     },
   });
 
-  const employee = await prisma.user.upsert({
-    where: { email: 'employee@quickdesk.com' },
-    update: { passwordHash: employeePassword, name: 'John Employee', role: Role.EMPLOYEE },
+  const employeeBob = await prisma.user.upsert({
+    where: { email: 'employee.bob@quickdesk.com' },
+    update: { passwordHash: employeePassword, name: 'Employee Bob', role: Role.EMPLOYEE },
     create: {
-      email: 'employee@quickdesk.com',
-      name: 'John Employee',
+      email: 'employee.bob@quickdesk.com',
+      name: 'Employee Bob',
       passwordHash: employeePassword,
       role: Role.EMPLOYEE,
     },
   });
 
-  const employee2 = await prisma.user.upsert({
-    where: { email: 'alice@quickdesk.com' },
-    update: { passwordHash: employeePassword, name: 'Alice Smith', role: Role.EMPLOYEE },
+  const employeeAlice = await prisma.user.upsert({
+    where: { email: 'employee.alice@quickdesk.com' },
+    update: { passwordHash: employeePassword, name: 'Employee Alice', role: Role.EMPLOYEE },
     create: {
-      email: 'alice@quickdesk.com',
-      name: 'Alice Smith',
+      email: 'employee.alice@quickdesk.com',
+      name: 'Employee Alice',
       passwordHash: employeePassword,
       role: Role.EMPLOYEE,
     },
   });
 
-  console.log(`✅ Default accounts created:`);
-  console.log(`   - Admin:    ${admin.email} (password: admin123)`);
-  console.log(`   - Agent:    ${agent.email} (password: agent123)`);
-  console.log(`   - Agent:    ${agent2.email} (password: agent123)`);
-  console.log(`   - Employee: ${employee.email} (password: employee123)`);
-  console.log(`   - Employee: ${employee2.email} (password: employee123)`);
+  console.log('✅ Default user accounts seeded:');
+  console.log(`   Admin:      ${admin.email}         (password: admin123)`);
+  console.log(`   Agent:      ${agentJohn.email}  (password: agent123)`);
+  console.log(`   Agent:      ${agentSarah.email} (password: agent123)`);
+  console.log(`   Employee:   ${employeeBob.email}   (password: employee123)`);
+  console.log(`   Employee:   ${employeeAlice.email} (password: employee123)`);
 
-  // 2. Load & Index Knowledge Base Articles into Vector DB
+  // =========================================================================
+  // STEP 2 — Load & index Knowledge Base articles with proper chunk metadata
+  // =========================================================================
   const kbDir = path.join(__dirname, '..', 'knowledge-base');
-  let ai: GoogleGenAI | null = null;
-  if (process.env.GEMINI_API_KEY) {
-    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  }
+  const embeddings = createEmbeddings();
 
   if (fs.existsSync(kbDir)) {
     const files = fs.readdirSync(kbDir).filter((f) => f.endsWith('.md'));
     console.log(`\n📚 Processing ${files.length} Knowledge Base articles...`);
 
+    // Use the SAME splitter config as DocumentLoaderService (1000 chars, 200 overlap)
     const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 500,
-      chunkOverlap: 50,
+      chunkSize: 1000,
+      chunkOverlap: 200,
       separators: ['\n\n', '\n', ' ', ''],
     });
 
     for (const file of files) {
       const filePath = path.join(kbDir, file);
       const content = fs.readFileSync(filePath, 'utf-8');
-      const title = file.replace('.md', '').replace(/-/g, ' ').toUpperCase();
 
+      // Derive a readable title from filename
+      const title = file
+        .replace('.md', '')
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      // Upsert the KnowledgeBase article record (stable seed ID)
+      const seedId = `seed-${file}`;
       const article = await prisma.knowledgeBase.upsert({
-        where: { id: `seed-${file}` },
-        update: { title },
-        create: {
-          id: `seed-${file}`,
+        where: { id: seedId },
+        update: {
           title,
           filename: file,
           mimeType: 'text/markdown',
           storagePath: filePath,
-          status: 'INDEXED',
+        },
+        create: {
+          id: seedId,
+          title,
+          filename: file,
+          mimeType: 'text/markdown',
+          storagePath: filePath,
+          status: 'PROCESSING',
           uploadedBy: admin.id,
         },
       });
 
+      // Split content into chunks
       const docs = await splitter.createDocuments([content]);
-      await prisma.knowledgeBaseChunk.deleteMany({ where: { knowledgeBaseId: article.id } });
 
-      for (let i = 0; i < docs.length; i++) {
-        const chunkText = docs[i].pageContent;
-        let embeddingVector: number[] | null = null;
+      // Clear any existing chunks for this article (idempotent re-seed)
+      await prisma.knowledgeBaseChunk.deleteMany({
+        where: { knowledgeBaseId: article.id },
+      });
 
-        if (ai) {
+      // Process chunks in batches of 10 (matching VectorStoreService batch size)
+      const batchSize = 10;
+      let embeddedCount = 0;
+
+      for (let batchStart = 0; batchStart < docs.length; batchStart += batchSize) {
+        const batch = docs.slice(batchStart, batchStart + batchSize);
+        const texts = batch.map((doc) => doc.pageContent);
+
+        // Generate embeddings for the entire batch at once
+        let vectors: number[][] | null = null;
+        if (embeddings) {
           try {
-            const embedRes = await ai.models.embedContent({
-              model: 'text-embedding-004',
-              contents: chunkText,
-            });
-            embeddingVector = embedRes.embeddings?.[0]?.values || null;
-          } catch (e) {
-            // Silently fallback if key invalid
+            vectors = await embeddings.embedDocuments(texts);
+          } catch (e: any) {
+            console.warn(`   ⚠️  Embedding batch failed for ${file} (batch ${batchStart}): ${e.message}`);
+            // Rate limit back-off
+            await sleep(2000);
+            try {
+              vectors = await embeddings.embedDocuments(texts);
+            } catch (retryErr: any) {
+              console.warn(`   ⚠️  Retry also failed: ${retryErr.message}`);
+            }
           }
         }
 
-        const chunk = await prisma.knowledgeBaseChunk.create({
-          data: {
-            knowledgeBaseId: article.id,
-            content: chunkText,
-            chunkIndex: i,
-          },
-        });
+        for (let j = 0; j < batch.length; j++) {
+          const chunkIndex = batchStart + j;
+          const chunkText = batch[j].pageContent;
+          const vector = vectors ? vectors[j] : null;
 
-        if (embeddingVector && embeddingVector.length > 0) {
-          const vectorStr = `[${embeddingVector.join(',')}]`;
-          await prisma.$executeRawUnsafe(
-            `UPDATE "knowledge_base_chunks" SET embedding = $1::vector WHERE id = $2`,
-            vectorStr,
-            chunk.id,
-          );
+          // Build rich metadata for each chunk (matches upload processor behavior)
+          const chunkMetadata = {
+            sourceTitle: title,
+            sourceFile: file,
+            knowledgeBaseId: article.id,
+            chunkIndex,
+            totalChunks: docs.length,
+          };
+
+          if (vector && vector.length > 0) {
+            // Use raw SQL to insert with vector embedding in one shot
+            const vectorStr = `[${vector.join(',')}]`;
+            await prisma.$executeRawUnsafe(
+              `INSERT INTO knowledge_base_chunks (id, "knowledgeBaseId", "chunkIndex", content, metadata, embedding)
+               VALUES (gen_random_uuid(), $1, $2, $3, $4::jsonb, $5::vector)`,
+              article.id,
+              chunkIndex,
+              chunkText,
+              JSON.stringify(chunkMetadata),
+              vectorStr,
+            );
+            embeddedCount++;
+          } else {
+            // Insert without embedding (Prisma ORM) — still store metadata
+            await prisma.knowledgeBaseChunk.create({
+              data: {
+                knowledgeBaseId: article.id,
+                chunkIndex,
+                content: chunkText,
+                metadata: chunkMetadata,
+              },
+            });
+          }
+        }
+
+        // Small delay between batches to avoid hitting API rate limits
+        if (vectors && batchStart + batchSize < docs.length) {
+          await sleep(500);
         }
       }
-      console.log(`   ✓ Indexed ${file} (${docs.length} chunks)`);
+
+      // Update the KnowledgeBase record with final status and chunk count
+      await prisma.knowledgeBase.update({
+        where: { id: article.id },
+        data: {
+          status: 'INDEXED',
+          chunkCount: docs.length,
+        },
+      });
+
+      console.log(
+        `   ✓ ${file}: ${docs.length} chunks created, ${embeddedCount} embedded`,
+      );
     }
+  } else {
+    console.warn('⚠️  knowledge-base/ directory not found — skipping KB seeding');
   }
 
-  // 3. Seed Sample Ticket Pool
-  console.log('\n🎫 Seeding sample ticket pool & audit history...');
+  // =========================================================================
+  // STEP 3 — Seed sample tickets (idempotent via upsert with stable IDs)
+  // =========================================================================
+  console.log('\n🎫 Seeding sample tickets & audit history...');
 
-  const ticket1 = await prisma.ticket.create({
-    data: {
+  const TICKET_SEED_IDS = {
+    vpnIssue: 'seed-ticket-vpn-auth-fail',
+    leaveBalance: 'seed-ticket-leave-balance',
+    expenseReimburse: 'seed-ticket-expense-ide',
+  };
+
+  const ticket1 = await prisma.ticket.upsert({
+    where: { id: TICKET_SEED_IDS.vpnIssue },
+    update: {
       title: 'VPN fails to authenticate on remote network',
-      description: 'I am attempting to connect to the corporate VPN from home but receive error "TLS Handshake Failed".',
+      description:
+        'I am attempting to connect to the corporate VPN from home but receive error "TLS Handshake Failed". I have tried restarting the VPN client and my router.',
       status: TicketStatus.OPEN,
       category: TicketCategory.IT,
       priority: TicketPriority.HIGH,
       aiCategory: TicketCategory.IT,
       aiPriority: TicketPriority.HIGH,
-      employeeId: employee.id,
+      employeeId: employeeBob.id,
+    },
+    create: {
+      id: TICKET_SEED_IDS.vpnIssue,
+      title: 'VPN fails to authenticate on remote network',
+      description:
+        'I am attempting to connect to the corporate VPN from home but receive error "TLS Handshake Failed". I have tried restarting the VPN client and my router.',
+      status: TicketStatus.OPEN,
+      category: TicketCategory.IT,
+      priority: TicketPriority.HIGH,
+      aiCategory: TicketCategory.IT,
+      aiPriority: TicketPriority.HIGH,
+      employeeId: employeeBob.id,
       attachmentFilename: 'vpn-error.png',
     },
   });
 
-  const ticket2 = await prisma.ticket.create({
-    data: {
+  const ticket2 = await prisma.ticket.upsert({
+    where: { id: TICKET_SEED_IDS.leaveBalance },
+    update: {
       title: 'Need annual leave balance clarification for Q3',
-      description: 'The HR portal shows 12 days remaining, but I took 3 days off last month. Can someone verify?',
+      description:
+        'The HR portal shows 12 days remaining, but I took 3 days off last month. Can someone verify?',
       status: TicketStatus.RESOLVED,
       category: TicketCategory.HR,
       priority: TicketPriority.MEDIUM,
       aiCategory: TicketCategory.HR,
       aiPriority: TicketPriority.LOW,
-      employeeId: employee2.id,
-      agentId: agent.id,
-      aiDraftReply: 'Dear Alice,\n\nBased on our Leave Policy, leave requests submitted in the last 30 days are reflected after payroll cycle close. Your accurate balance is 12 days.',
-      finalReply: 'Hi Alice,\n\nI verified with payroll. Your leave request was approved after the last cutoff, so 12 days is indeed your accurate balance.\n\nBest regards,\nAgent Smith',
-      ragCitations: ['LEAVE POLICY'],
+      employeeId: employeeAlice.id,
+      agentId: agentJohn.id,
+    },
+    create: {
+      id: TICKET_SEED_IDS.leaveBalance,
+      title: 'Need annual leave balance clarification for Q3',
+      description:
+        'The HR portal shows 12 days remaining, but I took 3 days off last month. Can someone verify?',
+      status: TicketStatus.RESOLVED,
+      category: TicketCategory.HR,
+      priority: TicketPriority.MEDIUM,
+      aiCategory: TicketCategory.HR,
+      aiPriority: TicketPriority.LOW,
+      employeeId: employeeAlice.id,
+      agentId: agentJohn.id,
+      aiDraftReply:
+        'Dear Alice,\n\nBased on our Leave Policy, leave requests submitted in the last 30 days are reflected after payroll cycle close. Your accurate balance is 12 days.',
+      finalReply:
+        'Hi Alice,\n\nI verified with payroll. Your leave request was approved after the last cutoff, so 12 days is indeed your accurate balance.\n\nBest regards,\nAgent John',
+      ragCitations: ['Leave Policy'],
       resolvedAt: new Date(),
     },
   });
 
-  const ticket3 = await prisma.ticket.create({
-    data: {
+  const ticket3 = await prisma.ticket.upsert({
+    where: { id: TICKET_SEED_IDS.expenseReimburse },
+    update: {
       title: 'Software expense reimbursement pending approval',
-      description: 'Submitted receipt for IDE subscription $49. Please expedite reimbursement approval.',
+      description:
+        'Submitted receipt for IDE subscription $49. Please expedite reimbursement approval.',
       status: TicketStatus.IN_PROGRESS,
       category: TicketCategory.FINANCE,
       priority: TicketPriority.MEDIUM,
       aiCategory: TicketCategory.FINANCE,
       aiPriority: TicketPriority.MEDIUM,
-      employeeId: employee.id,
-      agentId: agent2.id,
+      employeeId: employeeBob.id,
+      agentId: agentSarah.id,
+    },
+    create: {
+      id: TICKET_SEED_IDS.expenseReimburse,
+      title: 'Software expense reimbursement pending approval',
+      description:
+        'Submitted receipt for IDE subscription $49. Please expedite reimbursement approval.',
+      status: TicketStatus.IN_PROGRESS,
+      category: TicketCategory.FINANCE,
+      priority: TicketPriority.MEDIUM,
+      aiCategory: TicketCategory.FINANCE,
+      aiPriority: TicketPriority.MEDIUM,
+      employeeId: employeeBob.id,
+      agentId: agentSarah.id,
       attachmentFilename: 'receipt-ide.pdf',
     },
   });
 
-  // 4. Seed Audit Logs for Overrides
+  // =========================================================================
+  // STEP 4 — Seed audit log entries (idempotent — delete & recreate for seeds)
+  // =========================================================================
+  // Clean up seed audit logs before re-creating
+  await prisma.auditLog.deleteMany({
+    where: { ticketId: ticket2.id, field: 'priority' },
+  });
+
   await prisma.auditLog.create({
     data: {
       ticketId: ticket2.id,
-      changedById: agent.id,
+      changedById: agentJohn.id,
       field: 'priority',
       oldValue: 'LOW',
       newValue: 'MEDIUM',
     },
   });
 
-  console.log(`   ✓ Created sample tickets (Open: ${ticket1.id}, Resolved: ${ticket2.id}, In Progress: ${ticket3.id})`);
-  console.log('\n🎉 Comprehensive database seeding completed successfully!');
+  // =========================================================================
+  // STEP 5 — Seed sample chat messages for the resolved ticket
+  // =========================================================================
+  const existingMessages = await prisma.message.count({
+    where: { ticketId: ticket2.id },
+  });
+
+  if (existingMessages === 0) {
+    await prisma.message.createMany({
+      data: [
+        {
+          ticketId: ticket2.id,
+          senderId: employeeAlice.id,
+          text: 'Hi, I noticed my leave balance seems incorrect. The portal shows 12 days but I recently took 3 days off.',
+        },
+        {
+          ticketId: ticket2.id,
+          senderId: agentJohn.id,
+          text: 'Hi Alice, thanks for reaching out. Let me check with the payroll team on this. Leave balance updates typically happen after the payroll cycle closes.',
+        },
+        {
+          ticketId: ticket2.id,
+          senderId: agentJohn.id,
+          text: 'I verified with payroll — your 3 days were approved after the last cutoff date, so they will reflect in the next cycle. 12 days is your accurate current balance.',
+        },
+      ],
+    });
+    console.log('   ✓ Sample chat messages seeded for resolved ticket');
+  }
+
+  console.log(`   ✓ Tickets seeded — Open: ${ticket1.id}, Resolved: ${ticket2.id}, In Progress: ${ticket3.id}`);
+  console.log('\n🎉 Database seeding completed successfully!');
 }
 
+// ---------------------------------------------------------------------------
+// Execute
+// ---------------------------------------------------------------------------
 main()
   .catch((e) => {
     console.error('❌ Seeding error:', e);

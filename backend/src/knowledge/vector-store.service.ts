@@ -22,14 +22,16 @@ export class VectorStoreService {
 
   async addDocuments(knowledgeBaseId: string, docs: Document[]): Promise<number> {
     const validDocs = docs.filter((doc) => doc.pageContent && doc.pageContent.trim().length > 0);
-    
+
     if (validDocs.length === 0) {
       this.logger.warn(`No non-empty document content to index for KB: ${knowledgeBaseId}`);
       return 0;
     }
 
-    this.logger.log(`Generating embeddings and indexing ${validDocs.length} chunks for KB: ${knowledgeBaseId}`);
-    
+    this.logger.log(
+      `Generating embeddings and indexing ${validDocs.length} chunks for KB: ${knowledgeBaseId}`,
+    );
+
     // Process in batches of 10 to respect API rate limits
     const batchSize = 10;
     let storedCount = 0;
@@ -37,32 +39,68 @@ export class VectorStoreService {
     for (let i = 0; i < validDocs.length; i += batchSize) {
       const batch = validDocs.slice(i, i + batchSize);
       const texts = batch.map((doc) => doc.pageContent);
-      
-      const vectors = await this.embeddings.embedDocuments(texts);
+
+      // Attempt embedding with one retry on failure
+      let vectors: number[][] | null = null;
+      try {
+        vectors = await this.embeddings.embedDocuments(texts);
+      } catch (e: any) {
+        this.logger.warn(
+          `Embedding batch ${i}-${i + batch.length} failed: ${e.message}. Retrying after 2s...`,
+        );
+        await new Promise((r) => setTimeout(r, 2000));
+        try {
+          vectors = await this.embeddings.embedDocuments(texts);
+        } catch (retryErr: any) {
+          this.logger.error(
+            `Embedding retry failed for batch ${i}-${i + batch.length}: ${retryErr.message}. Storing chunks without embeddings.`,
+          );
+        }
+      }
 
       for (let j = 0; j < batch.length; j++) {
         const doc = batch[j];
-        const vector = vectors[j];
+        const vector = vectors ? vectors[j] : null;
         const chunkIndex = i + j;
 
-        if (!vector || vector.length === 0) {
-          this.logger.warn(`Skipping chunk ${chunkIndex} due to empty embedding vector`);
-          continue;
-        }
-
-        const vectorSql = `[${vector.join(',')}]`;
-
-        await this.prisma.$executeRawUnsafe(
-          `INSERT INTO knowledge_base_chunks (id, "knowledgeBaseId", "chunkIndex", content, metadata, embedding)
-           VALUES (gen_random_uuid(), $1, $2, $3, $4::jsonb, $5::vector)`,
+        // Enrich metadata with totalChunks for traceability
+        const enrichedMetadata = {
+          ...(doc.metadata || {}),
           knowledgeBaseId,
           chunkIndex,
-          doc.pageContent,
-          JSON.stringify(doc.metadata || {}),
-          vectorSql,
-        );
+          totalChunks: validDocs.length,
+        };
+
+        if (vector && vector.length > 0) {
+          const vectorSql = `[${vector.join(',')}]`;
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO knowledge_base_chunks (id, "knowledgeBaseId", "chunkIndex", content, metadata, embedding)
+             VALUES (gen_random_uuid(), $1, $2, $3, $4::jsonb, $5::vector)`,
+            knowledgeBaseId,
+            chunkIndex,
+            doc.pageContent,
+            JSON.stringify(enrichedMetadata),
+            vectorSql,
+          );
+        } else {
+          // Store chunk without embedding — still available for full-text fallback
+          this.logger.warn(`Chunk ${chunkIndex} stored without embedding for KB: ${knowledgeBaseId}`);
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO knowledge_base_chunks (id, "knowledgeBaseId", "chunkIndex", content, metadata)
+             VALUES (gen_random_uuid(), $1, $2, $3, $4::jsonb)`,
+            knowledgeBaseId,
+            chunkIndex,
+            doc.pageContent,
+            JSON.stringify(enrichedMetadata),
+          );
+        }
 
         storedCount++;
+      }
+
+      // Small delay between batches to respect rate limits
+      if (i + batchSize < validDocs.length) {
+        await new Promise((r) => setTimeout(r, 300));
       }
     }
 

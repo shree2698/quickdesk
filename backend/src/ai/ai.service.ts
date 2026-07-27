@@ -79,7 +79,7 @@ Respond ONLY in valid JSON format:
     const relevantChunks = await this.ragService.answerQuestion(query);
 
     const contextText = relevantChunks.sources
-      .map((c) => `[Snippet]\n"${c.content}"`)
+      .map((c) => `Source: ${c.title}\n"${c.content}"`)
       .join('\n\n');
 
     const prompt = `You are QuickDesk Agent Copilot AI.
@@ -115,8 +115,8 @@ IMPORTANT: If the provided Internal Guides are empty or do not contain the neces
     }
 
     const citations = relevantChunks.sources.map((c) => ({
-      articleId: c.metadata.knowledgeBaseId || '',
-      title: c.metadata.filename || 'Knowledge Base',
+      articleId: c.knowledgeBaseId || '',
+      title: c.title || 'Knowledge Base',
       snippet: c.content.substring(0, 100) + '...',
     }));
 

@@ -44,6 +44,7 @@ export class DocumentLoaderService {
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
       chunkOverlap: 200,
+      separators: ['\n\n', '\n', ' ', ''],
     });
 
     const splitDocs = await splitter.splitDocuments([markdownDoc]);

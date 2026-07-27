@@ -48,13 +48,17 @@ export class KnowledgeUploadProcessor extends WorkerHost {
         kb.filename,
       );
 
-      // Attach knowledgeBaseId metadata
-      docs.forEach((doc) => {
+      // Attach rich metadata for traceability and RAG citation
+      docs.forEach((doc, index) => {
         doc.metadata = {
           ...doc.metadata,
           knowledgeBaseId: kb.id,
+          sourceTitle: kb.title,
+          sourceFile: kb.filename,
           title: kb.title,
           filename: kb.filename,
+          chunkIndex: index,
+          totalChunks: docs.length,
         };
       });
 

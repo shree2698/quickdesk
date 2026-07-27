@@ -26,29 +26,51 @@ export class RagService {
     // 1. Retrieve top relevant chunks from PGVector
     const docs: Document[] = await this.vectorStoreService.similaritySearch(question, 4);
 
-    // Form context string from retrieved documents
-    const context = docs.map((doc) => doc.pageContent).join('\n\n---\n\n');
+    // 2. Similarity threshold check — fallback if no relevant chunks
+    if (
+      docs.length === 0 ||
+      (docs[0].metadata?.score !== undefined && docs[0].metadata.score < 0.4)
+    ) {
+      return {
+        answer:
+          "I couldn't find a direct match in our documentation. Would you like me to create a support ticket or put you in touch with an agent?",
+        sources: [],
+      };
+    }
 
-    // Extract citations/sources metadata
+    // 3. Build context blocks with source article titles for citations
+    const context = docs
+      .map((doc) => {
+        const title = doc.metadata?.sourceTitle || doc.metadata?.title || 'Unknown Source';
+        return `Source: ${title}\n"${doc.pageContent}"`;
+      })
+      .join('\n\n');
+
+    // Extract citations/sources metadata with title info
     const sources = docs.map((doc) => ({
       content: doc.pageContent,
+      title: doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base',
+      knowledgeBaseId: doc.metadata?.knowledgeBaseId || '',
+      score: doc.metadata?.score,
       metadata: doc.metadata,
     }));
 
-    // 2. Define standard RAG PromptTemplate
-    const promptTemplate = PromptTemplate.fromTemplate(`
-You are an expert AI Assistant answering questions strictly based on the provided Knowledge Base context.
-If the answer cannot be deduced from the context, state clearly that the information is not available in the knowledge base.
+    // 4. Define RAG prompt template with citation requirements (per 05-ai-rag.md spec)
+    const promptTemplate = PromptTemplate.fromTemplate(`You are QuickDesk AI, an internal corporate support assistant.
+Answer the user's question using ONLY the context blocks below. Do not use outside knowledge.
+Cite the source article name in brackets next to the information you present.
+If the answer is not explicitly present in the context, respond: "I'm sorry, but I cannot find that information in our company documentation. Would you like me to open a ticket for you?"
+Maintain a professional, helpful corporate IT/HR support tone.
 
-Context:
+[Context Chunks]
 {context}
 
-Question:
+[Question]
 {question}
 
-Answer:`);
+[Answer]`);
 
-    // 3. Construct LCEL RunnableSequence
+    // 5. Construct LCEL RunnableSequence
     const chain = RunnableSequence.from([
       {
         context: () => context,
@@ -59,7 +81,7 @@ Answer:`);
       new StringOutputParser(),
     ]);
 
-    // 4. Execute LCEL chain
+    // 6. Execute LCEL chain
     const answer = await chain.invoke(question);
 
     return {
