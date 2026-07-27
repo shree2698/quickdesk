@@ -110,7 +110,17 @@ IMPORTANT: If the provided Internal Guides are empty or do not contain the neces
       });
     } catch (err: any) {
       this.logger.error(`Copilot draft generation failed: ${err.message}`);
-      suggestion = `Hello,\n\nThank you for reaching out regarding "${ticketTitle}". We are looking into your issue and will get back to you shortly.`;
+      const isRateLimit =
+        err.status === 429 ||
+        err.message?.includes('429') ||
+        err.message?.includes('quota') ||
+        err.message?.includes('Too Many Requests');
+
+      if (isRateLimit) {
+        suggestion = `[AI Copilot Note: Rate limit reached for AI service. Please compose your reply manually or try clicking 'Suggest Draft' again in a few seconds.]`;
+      } else {
+        suggestion = `Hello,\n\nThank you for reaching out regarding "${ticketTitle}". We are looking into your issue and will get back to you shortly.`;
+      }
     }
 
     const citations = relevantChunks.sources.map((c) => ({

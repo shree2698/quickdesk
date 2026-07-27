@@ -77,12 +77,32 @@ Maintain a professional, helpful corporate IT/HR support tone.
       new StringOutputParser(),
     ]);
 
-    // 6. Execute LCEL chain
-    const answer = await chain.invoke(question);
+    // 6. Execute LCEL chain with rate-limit and error handling
+    try {
+      const answer = await chain.invoke(question);
+      return { answer, sources };
+    } catch (err: any) {
+      this.logger.error(`RAG Execution error: ${err.message}`);
 
-    return {
-      answer,
-      sources,
-    };
+      const isRateLimit =
+        err.status === 429 ||
+        err.message?.includes('429') ||
+        err.message?.includes('quota') ||
+        err.message?.includes('Too Many Requests');
+
+      if (isRateLimit) {
+        return {
+          answer:
+            "The AI Assistant is currently experiencing high demand and has reached its rate limit. Please wait a few seconds and try again, or click 'Create Ticket' below to reach a human support agent directly.",
+          sources: [],
+        };
+      }
+
+      return {
+        answer:
+          "I'm sorry, our AI service is temporarily unavailable right now. Would you like to create a support ticket instead?",
+        sources: [],
+      };
+    }
   }
 }
