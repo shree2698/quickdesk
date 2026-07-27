@@ -290,7 +290,13 @@ export class TicketsService {
   async generateCopilotDraft(id: string) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
-      include: { employee: { select: { name: true } } },
+      include: {
+        employee: { select: { name: true } },
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          include: { sender: { select: { name: true, role: true } } },
+        },
+      },
     });
 
     if (!ticket) {
@@ -298,10 +304,18 @@ export class TicketsService {
     }
 
     const employeeName = ticket.employee?.name || 'Employee';
+    const chatHistory =
+      ticket.messages && ticket.messages.length > 0
+        ? ticket.messages
+            .map((m) => `[${m.sender?.role || 'USER'} - ${m.sender?.name}]: ${m.text}`)
+            .join('\n')
+        : 'No previous chat messages.';
+
     const copilotResult = await this.aiService.generateCopilotDraft(
       ticket.title,
       ticket.description,
       employeeName,
+      chatHistory,
     );
 
     const citationTitles = copilotResult.citations.map((c) => c.title).filter(Boolean);

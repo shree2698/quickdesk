@@ -14,6 +14,7 @@ import {
   History,
   Bot,
   ArrowLeft,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { MarkdownViewer } from '@/components/ui/MarkdownViewer';
@@ -80,8 +81,22 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
 
     socket.emit('join_ticket', { ticketId });
 
+    socket.on('ticket:updated', (updated: any) => {
+      if (updated.id === ticketId || updated.ticketId === ticketId) {
+        fetchTicketDetail();
+      }
+    });
+
+    socket.on('ticket:resolved', (resolved: any) => {
+      if (resolved.id === ticketId) {
+        fetchTicketDetail();
+      }
+    });
+
     return () => {
       socket.emit('leave_ticket', { ticketId });
+      socket.off('ticket:updated');
+      socket.off('ticket:resolved');
     };
   }, [socket, ticketId]);
 
@@ -238,7 +253,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Ticket Original Info + Copilot + Reply */}
+        {/* Left 2 Cols: Ticket Original Info + Conversation + Copilot + Reply */}
         <div className="lg:col-span-2 space-y-6">
           {/* Original Ticket Description Card */}
           <div className="glass-panel p-6 rounded-2xl space-y-4">
@@ -257,6 +272,38 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
               </div>
             )}
           </div>
+
+          {/* Live Support Conversation History Card */}
+          {ticket.messages && ticket.messages.length > 0 && (
+            <div className="glass-panel p-6 rounded-2xl space-y-4 border border-slate-200 shadow-2xs">
+              <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
+                <MessageSquare className="w-4 h-4 text-blue-600" />
+                Live Chat Conversation History ({ticket.messages.length} messages)
+              </h3>
+
+              <div className="space-y-3">
+                {ticket.messages.map((msg: any) => (
+                  <div
+                    key={msg.id}
+                    className={`p-4 rounded-xl border text-sm space-y-1.5 shadow-2xs ${
+                      msg.sender?.role === 'EMPLOYEE'
+                        ? 'bg-blue-50/70 border-blue-200 text-slate-900 mr-4'
+                        : 'bg-slate-50 border-slate-200 text-slate-900 ml-4'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-200/60 pb-1.5 font-medium">
+                      <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
+                        <User className="w-3.5 h-3.5 text-blue-600" />
+                        {msg.sender?.name || 'User'} ({msg.sender?.role || 'EMPLOYEE'})
+                      </span>
+                      <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
+                    </div>
+                    <MarkdownViewer content={msg.text} className="text-slate-800 text-sm" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* AI Copilot Suggestion Pane */}
           <div className="glass-panel p-6 rounded-2xl border border-blue-200 bg-blue-50/40 space-y-4">

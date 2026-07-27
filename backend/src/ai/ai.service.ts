@@ -78,8 +78,9 @@ Respond ONLY in valid JSON format:
     ticketTitle: string,
     ticketDescription: string,
     employeeName = 'Employee',
+    chatHistory = 'No previous messages.',
   ) {
-    const query = `${ticketTitle} ${ticketDescription}`;
+    const query = `${ticketTitle} ${ticketDescription} ${chatHistory.slice(-500)}`;
     const relevantChunks = await this.ragService.answerQuestion(query);
 
     const contextText = relevantChunks.sources
@@ -92,10 +93,11 @@ Generate a concise, friendly, real-time CHAT MESSAGE draft for a support agent t
 
 CRITICAL FORMATTING & STYLE RULES:
 1. Address employee naturally by name "{employeeName}" in a warm, direct CHAT message opening (e.g. "Hi {employeeName}, ...").
-2. DO NOT write an email! DO NOT include "Subject:", DO NOT include formal email headers, and DO NOT include formal sign-offs (e.g. "Best regards", "QuickDesk Agent Copilot AI").
-3. Use clean Markdown (short paragraphs, bullet points, bold key terms) for fast chat reading.
-4. Ground your reply strictly on the internal knowledge base articles provided below if available.
-5. If no relevant internal guides are found, state cleanly that no matching guide was found in our documentation, ask 2-3 brief troubleshooting questions, and suggest next steps.
+2. DO NOT write an email! DO NOT include "Subject:", DO NOT include formal email headers, and DO NOT include formal sign-offs.
+3. Pay close attention to the ongoing Chat History (employee follow-up questions or agent updates) and directly answer the latest employee message.
+4. Use clean Markdown (short paragraphs, bullet points, bold key terms) for fast chat reading.
+5. Ground your reply strictly on the internal knowledge base articles provided below if available.
+6. If no relevant internal guides are found, address the employee's latest message directly, ask 2-3 targeted troubleshooting questions, and suggest next steps.
 
 [Employee Name]
 {employeeName}
@@ -106,10 +108,13 @@ CRITICAL FORMATTING & STYLE RULES:
 [Ticket Description]
 {ticketDescription}
 
+[Live Chat History (Most Recent Messages)]
+{chatHistory}
+
 [Relevant Internal Guides]
 {contextText}
 
-Generate ONLY the chat message content:`);
+Generate ONLY the chat message response:`);
 
     const chain = promptTemplate.pipe(this.model).pipe(new StringOutputParser());
 
@@ -119,6 +124,7 @@ Generate ONLY the chat message content:`);
         employeeName,
         ticketTitle,
         ticketDescription,
+        chatHistory,
         contextText: contextText || 'No relevant internal guides found.',
       });
     } catch (err: any) {
