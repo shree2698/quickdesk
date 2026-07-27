@@ -128,10 +128,11 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
     e.preventDefault();
     if (!replyText.trim()) return;
 
-    setReplyLoading(true);
+    const citationsList = copilotCitations?.map((c) => c.title).filter(Boolean) || ticket?.ragCitations || [];
     try {
       const res = await api.post(`/tickets/${ticketId}/reply`, {
         finalReply: replyText,
+        ragCitations: citationsList,
       });
       setTicket(res.data);
     } catch (err: any) {

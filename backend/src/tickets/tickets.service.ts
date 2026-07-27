@@ -195,14 +195,20 @@ export class TicketsService {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
 
+    const updateData: any = {
+      finalReply: dto.finalReply,
+      status: TicketStatus.RESOLVED,
+      agentId,
+      resolvedAt: new Date(),
+    };
+
+    if (dto.ragCitations && dto.ragCitations.length > 0) {
+      updateData.ragCitations = dto.ragCitations;
+    }
+
     const resolvedTicket = await this.prisma.ticket.update({
       where: { id },
-      data: {
-        finalReply: dto.finalReply,
-        status: TicketStatus.RESOLVED,
-        agentId,
-        resolvedAt: new Date(),
-      },
+      data: updateData,
       include: {
         employee: { select: { id: true, name: true, email: true } },
         agent: { select: { id: true, name: true, email: true } },
@@ -216,22 +222,36 @@ export class TicketsService {
   }
 
   async generateCopilotDraft(id: string) {
-    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: { employee: { select: { name: true } } },
+    });
+
     if (!ticket) {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
 
-    const copilotResult = await this.aiService.generateCopilotDraft(ticket.title, ticket.description);
+    const employeeName = ticket.employee?.name || 'Employee';
+    const copilotResult = await this.aiService.generateCopilotDraft(
+      ticket.title,
+      ticket.description,
+      employeeName,
+    );
+
+    const citationTitles = copilotResult.citations.map((c) => c.title).filter(Boolean);
 
     await this.prisma.ticket.update({
       where: { id },
       data: {
         aiDraftReply: copilotResult.suggestion,
-        ragCitations: copilotResult.citations.map((c) => c.title),
+        ragCitations: citationTitles,
       },
     });
 
-    return copilotResult;
+    return {
+      ...copilotResult,
+      ragCitations: citationTitles,
+    };
   }
 
   async getAuditLogs(id: string) {

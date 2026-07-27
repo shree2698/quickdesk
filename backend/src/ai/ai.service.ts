@@ -74,7 +74,11 @@ Respond ONLY in valid JSON format:
    * Generates a context-aware AI copilot response draft for agents using RAG over the Knowledge Base.
    * Uses LangChain LCEL chain with dynamic model from env.
    */
-  async generateCopilotDraft(ticketTitle: string, ticketDescription: string) {
+  async generateCopilotDraft(
+    ticketTitle: string,
+    ticketDescription: string,
+    employeeName = 'Employee',
+  ) {
     const query = `${ticketTitle} ${ticketDescription}`;
     const relevantChunks = await this.ragService.answerQuestion(query);
 
@@ -84,14 +88,17 @@ Respond ONLY in valid JSON format:
 
     const promptTemplate = PromptTemplate.fromTemplate(`
 You are QuickDesk Agent Copilot AI.
-Generate a concise, friendly, real-time CHAT MESSAGE draft for a support agent to send directly to an employee in a live helpdesk chat.
+Generate a concise, friendly, real-time CHAT MESSAGE draft for a support agent to send directly to employee "{employeeName}" in a live helpdesk chat.
 
 CRITICAL FORMATTING & STYLE RULES:
-1. Write as a direct, friendly CHAT MESSAGE.
-2. DO NOT write an email! DO NOT include "Subject:", DO NOT include formal email headers, DO NOT include formal email greetings (e.g. "Dear...", "Hi [Employee Name]"), and DO NOT include formal sign-offs (e.g. "Best regards", "QuickDesk Agent Copilot AI").
+1. Address employee naturally by name "{employeeName}" in a warm, direct CHAT message opening (e.g. "Hi {employeeName}, ...").
+2. DO NOT write an email! DO NOT include "Subject:", DO NOT include formal email headers, and DO NOT include formal sign-offs (e.g. "Best regards", "QuickDesk Agent Copilot AI").
 3. Use clean Markdown (short paragraphs, bullet points, bold key terms) for fast chat reading.
 4. Ground your reply strictly on the internal knowledge base articles provided below if available.
 5. If no relevant internal guides are found, state cleanly that no matching guide was found in our documentation, ask 2-3 brief troubleshooting questions, and suggest next steps.
+
+[Employee Name]
+{employeeName}
 
 [Ticket Title]
 {ticketTitle}
@@ -109,6 +116,7 @@ Generate ONLY the chat message content:`);
     let suggestion = '';
     try {
       suggestion = await chain.invoke({
+        employeeName,
         ticketTitle,
         ticketDescription,
         contextText: contextText || 'No relevant internal guides found.',
