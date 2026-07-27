@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { KnowledgeList, KnowledgeDocument } from '@/components/knowledge/knowledge-list';
 import { KnowledgeUploadModal } from '@/components/knowledge/knowledge-upload-modal';
+import { api } from '@/lib/api';
 
 export default function AdminKnowledgePage() {
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
@@ -11,16 +12,8 @@ export default function AdminKnowledgePage() {
 
   const fetchDocuments = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/knowledge', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDocuments(data);
-      }
+      const res = await api.get('/knowledge');
+      setDocuments(res.data);
     } catch (err) {
       console.error('Failed to fetch knowledge base documents', err);
     } finally {
@@ -37,13 +30,7 @@ export default function AdminKnowledgePage() {
 
   const handleReindex = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      await fetch(`/api/knowledge/${id}/reindex`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.post(`/knowledge/${id}/reindex`);
       fetchDocuments();
     } catch (err) {
       console.error('Failed to trigger re-index', err);
@@ -53,13 +40,7 @@ export default function AdminKnowledgePage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this Knowledge Base document?')) return;
     try {
-      const token = localStorage.getItem('token');
-      await fetch(`/api/knowledge/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/knowledge/${id}`);
       fetchDocuments();
     } catch (err) {
       console.error('Failed to delete document', err);

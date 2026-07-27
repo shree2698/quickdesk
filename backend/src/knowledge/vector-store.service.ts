@@ -21,14 +21,21 @@ export class VectorStoreService {
   }
 
   async addDocuments(knowledgeBaseId: string, docs: Document[]): Promise<number> {
-    this.logger.log(`Generating embeddings and indexing ${docs.length} chunks for KB: ${knowledgeBaseId}`);
+    const validDocs = docs.filter((doc) => doc.pageContent && doc.pageContent.trim().length > 0);
+    
+    if (validDocs.length === 0) {
+      this.logger.warn(`No non-empty document content to index for KB: ${knowledgeBaseId}`);
+      return 0;
+    }
+
+    this.logger.log(`Generating embeddings and indexing ${validDocs.length} chunks for KB: ${knowledgeBaseId}`);
     
     // Process in batches of 10 to respect API rate limits
     const batchSize = 10;
     let storedCount = 0;
 
-    for (let i = 0; i < docs.length; i += batchSize) {
-      const batch = docs.slice(i, i + batchSize);
+    for (let i = 0; i < validDocs.length; i += batchSize) {
+      const batch = validDocs.slice(i, i + batchSize);
       const texts = batch.map((doc) => doc.pageContent);
       
       const vectors = await this.embeddings.embedDocuments(texts);
@@ -37,6 +44,11 @@ export class VectorStoreService {
         const doc = batch[j];
         const vector = vectors[j];
         const chunkIndex = i + j;
+
+        if (!vector || vector.length === 0) {
+          this.logger.warn(`Skipping chunk ${chunkIndex} due to empty embedding vector`);
+          continue;
+        }
 
         const vectorSql = `[${vector.join(',')}]`;
 

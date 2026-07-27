@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { api } from '@/lib/api';
 
 interface KnowledgeUploadModalProps {
   isOpen: boolean;
@@ -36,31 +37,23 @@ export function KnowledgeUploadModal({ isOpen, onClose, onSuccess }: KnowledgeUp
     setUploading(true);
     setError('');
 
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('title', title);
+    if (title) formData.append('title', title);
 
     try {
-      const res = await fetch('/api/knowledge/upload', {
-        method: 'POST',
+      await api.post('/knowledge/upload', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData,
       });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Upload failed');
-      }
 
       setFile(null);
       setTitle('');
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to upload document');
+      setError(err.response?.data?.message || err.message || 'Failed to upload document');
     } finally {
       setUploading(false);
     }
