@@ -11,6 +11,7 @@ import { TicketQueryDto } from './dto/ticket-query.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdatePriorityDto } from './dto/update-priority.dto';
 import { SendReplyDto } from './dto/send-reply.dto';
+import { ResolveTicketDto } from './dto/resolve-ticket.dto';
 import { Role, TicketStatus } from '@prisma/client';
 
 @Injectable()
@@ -196,7 +197,54 @@ export class TicketsService {
     }
 
     const updateData: any = {
-      finalReply: dto.finalReply,
+      agentId,
+    };
+
+    if (ticket.status === TicketStatus.OPEN) {
+      updateData.status = TicketStatus.IN_PROGRESS;
+    }
+
+    if (dto.ragCitations && dto.ragCitations.length > 0) {
+      updateData.ragCitations = dto.ragCitations;
+    }
+
+    // Save message to database history
+    await this.prisma.message.create({
+      data: {
+        ticketId: id,
+        senderId: agentId,
+        text: dto.finalReply,
+      },
+    });
+
+    const updatedTicket = await this.prisma.ticket.update({
+      where: { id },
+      data: updateData,
+      include: {
+        employee: { select: { id: true, name: true, email: true } },
+        agent: { select: { id: true, name: true, email: true } },
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          include: { sender: { select: { id: true, name: true, email: true, role: true } } },
+        },
+      },
+    });
+
+    this.realtimeGateway.notifyTicketUpdated(updatedTicket);
+
+    return updatedTicket;
+  }
+
+  async resolveTicket(id: string, agentId: string, dto: ResolveTicketDto) {
+    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException(`Ticket with ID ${id} not found`);
+    }
+
+    const resolutionSummary = dto.finalReply || ticket.finalReply || 'Ticket marked resolved by agent.';
+
+    const updateData: any = {
+      finalReply: resolutionSummary,
       status: TicketStatus.RESOLVED,
       agentId,
       resolvedAt: new Date(),
@@ -206,16 +254,29 @@ export class TicketsService {
       updateData.ragCitations = dto.ragCitations;
     }
 
+    if (dto.finalReply) {
+      await this.prisma.message.create({
+        data: {
+          ticketId: id,
+          senderId: agentId,
+          text: dto.finalReply,
+        },
+      });
+    }
+
     const resolvedTicket = await this.prisma.ticket.update({
       where: { id },
       data: updateData,
       include: {
         employee: { select: { id: true, name: true, email: true } },
         agent: { select: { id: true, name: true, email: true } },
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          include: { sender: { select: { id: true, name: true, email: true, role: true } } },
+        },
       },
     });
 
-    // Broadcast ticket resolved event to ticket room and agent channel
     this.realtimeGateway.notifyTicketResolved(resolvedTicket);
 
     return resolvedTicket;

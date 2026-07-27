@@ -35,10 +35,11 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
   const [copilotLoading, setCopilotLoading] = useState(false);
   const [copilotDraft, setCopilotDraft] = useState('');
   const [copilotCitations, setCopilotCitations] = useState<any[]>([]);
-
+  const [draftCopied, setDraftCopied] = useState(false);
   // Reply state
   const [replyText, setReplyText] = useState('');
   const [replyLoading, setReplyLoading] = useState(false);
+  const [resolveLoading, setResolveLoading] = useState(false);
 
   // Audit log history
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -110,13 +111,32 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
     }
   };
 
+  const handleUseDraft = (draftText?: string) => {
+    const textToUse = draftText || copilotDraft;
+    if (!textToUse) return;
+
+    setReplyText(textToUse);
+    setDraftCopied(true);
+    setTimeout(() => setDraftCopied(false), 3000);
+
+    setTimeout(() => {
+      const editor = document.getElementById('reply-editor') as HTMLTextAreaElement;
+      if (editor) {
+        editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        editor.focus();
+      }
+    }, 100);
+  };
+
   const handleGenerateCopilot = async () => {
     setCopilotLoading(true);
     try {
       const res = await api.post(`/tickets/${ticketId}/copilot-suggest`);
-      setCopilotDraft(res.data.suggestion);
-      setCopilotCitations(res.data.citations || []);
-      setReplyText(res.data.suggestion);
+      const newSuggestion = res.data.suggestion || '';
+      setCopilotDraft(newSuggestion);
+      const rawCitations = res.data.citations || res.data.ragCitations || [];
+      setCopilotCitations(rawCitations);
+      handleUseDraft(newSuggestion);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to generate AI copilot draft');
     } finally {
@@ -124,21 +144,48 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
     }
   };
 
-  const handleSendReply = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendReply = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!replyText.trim()) return;
 
-    const citationsList = copilotCitations?.map((c) => c.title).filter(Boolean) || ticket?.ragCitations || [];
+    const citationsList =
+      copilotCitations?.map((c) => (typeof c === 'string' ? c : c.title)).filter(Boolean) ||
+      ticket?.ragCitations ||
+      [];
+
+    setReplyLoading(true);
     try {
       const res = await api.post(`/tickets/${ticketId}/reply`, {
         finalReply: replyText,
         ragCitations: citationsList,
       });
       setTicket(res.data);
+      setReplyText('');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send resolution reply');
+      setError(err.response?.data?.message || 'Failed to send reply message');
     } finally {
       setReplyLoading(false);
+    }
+  };
+
+  const handleResolveTicket = async () => {
+    const citationsList =
+      copilotCitations?.map((c) => (typeof c === 'string' ? c : c.title)).filter(Boolean) ||
+      ticket?.ragCitations ||
+      [];
+
+    setResolveLoading(true);
+    try {
+      const res = await api.post(`/tickets/${ticketId}/resolve`, {
+        finalReply: replyText.trim() ? replyText : undefined,
+        ragCitations: citationsList,
+      });
+      setTicket(res.data);
+      setReplyText('');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to resolve ticket');
+    } finally {
+      setResolveLoading(false);
     }
   };
 
@@ -233,16 +280,16 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
               <div className="p-4 rounded-xl bg-[#131a27] border border-[#2a364f] space-y-3">
                 <MarkdownViewer content={copilotDraft} className="text-xs text-slate-300" />
 
-                {copilotCitations && copilotCitations.length > 0 && (
+                {((copilotCitations && copilotCitations.length > 0) || (ticket?.ragCitations && ticket.ragCitations.length > 0)) && (
                   <div className="pt-2 border-t border-[#2a364f] space-y-1">
                     <span className="text-[10px] uppercase font-semibold text-blue-400 tracking-wider">
                       Grounding Citations:
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      {copilotCitations.map((c: any, i: number) => (
+                      {(copilotCitations.length > 0 ? copilotCitations : ticket.ragCitations).map((c: any, i: number) => (
                         <span key={i} className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 flex items-center gap-1">
                           <FileText className="w-3 h-3" />
-                          {c.title}
+                          {typeof c === 'string' ? c : c.title || 'Knowledge Base'}
                         </span>
                       ))}
                     </div>
@@ -250,10 +297,21 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
                 )}
 
                 <button
-                  onClick={() => setReplyText(copilotDraft)}
-                  className="text-xs text-blue-400 hover:underline font-medium"
+                  type="button"
+                  onClick={() => handleUseDraft(copilotDraft)}
+                  className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors cursor-pointer bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg"
                 >
-                  Use this draft in reply editor
+                  {draftCopied ? (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-400 font-semibold">Copied to reply editor below!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Use this draft in reply editor ↓</span>
+                    </>
+                  )}
                 </button>
               </div>
             ) : (
@@ -263,35 +321,72 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
             )}
           </div>
 
-          {/* Reply Editor & Send Reply */}
+          {/* Reply Editor & Separate Actions */}
           {ticket.status !== 'RESOLVED' ? (
             <form onSubmit={handleSendReply} className="glass-panel p-6 rounded-2xl space-y-4">
-              <h3 className="font-semibold text-white text-sm">Send Resolution Reply</h3>
+              <h3 className="font-semibold text-white text-sm flex items-center justify-between">
+                <span>Agent Reply Editor</span>
+                {draftCopied && (
+                  <span className="text-xs text-emerald-400 font-medium animate-pulse">
+                    ✓ Populated from AI Draft
+                  </span>
+                )}
+              </h3>
 
               <textarea
+                id="reply-editor"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                rows={5}
-                required
-                placeholder="Type resolution reply or edit AI draft here..."
-                className="w-full px-4 py-3 bg-[#131a27] border border-[#2a364f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
+                rows={4}
+                placeholder="Type a chat reply or edit AI draft here..."
+                className="w-full px-4 py-3 bg-[#131a27] border border-[#2a364f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm transition-all"
               />
 
-              <button
-                type="submit"
-                disabled={replyLoading || !replyText.trim()}
-                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-emerald-600/25 disabled:opacity-50 flex items-center gap-2"
-              >
-                <Send className="w-4 h-4" />
-                {replyLoading ? 'Sending & Resolving...' : 'Send Reply & Resolve Ticket'}
-              </button>
+              <div className="flex items-center gap-3 pt-2">
+                {/* Action 1: Send Chat Message */}
+                <button
+                  type="submit"
+                  disabled={replyLoading || !replyText.trim()}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-600/20 text-xs disabled:opacity-50 flex items-center gap-2"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {replyLoading ? 'Sending Reply...' : 'Send Reply Message'}
+                </button>
+
+                {/* Action 2: Resolve Ticket */}
+                <button
+                  type="button"
+                  onClick={handleResolveTicket}
+                  disabled={resolveLoading}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-emerald-600/20 text-xs disabled:opacity-50 flex items-center gap-2"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  {resolveLoading ? 'Resolving...' : 'Mark Ticket Resolved'}
+                </button>
+              </div>
             </form>
           ) : (
-            <div className="glass-panel p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
+            <div className="glass-panel p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-3">
               <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">
                 Final Sent Resolution Reply:
               </span>
-              <p className="text-sm text-slate-200 whitespace-pre-wrap">{ticket.finalReply}</p>
+              <MarkdownViewer content={ticket.finalReply || 'Ticket resolved.'} className="text-sm text-slate-200" />
+
+              {ticket.ragCitations && ticket.ragCitations.length > 0 && (
+                <div className="pt-2 border-t border-emerald-500/20 space-y-1">
+                  <span className="text-[10px] uppercase font-semibold text-emerald-400 tracking-wider">
+                    Resolved Grounding Citations:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {ticket.ragCitations.map((c: string, i: number) => (
+                      <span key={i} className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

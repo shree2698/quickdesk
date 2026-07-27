@@ -170,4 +170,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       updatedAt: ticket.updatedAt,
     });
   }
+
+  /**
+   * Helper method to broadcast ticket_updated to ticket room and agent channel
+   */
+  notifyTicketUpdated(ticket: any) {
+    this.server.to(`ticket-${ticket.id}`).emit('ticket:updated', ticket);
+    this.server.to('channel-agents').emit('ticket_updated', {
+      ticketId: ticket.id,
+      status: ticket.status,
+      updatedAt: ticket.updatedAt,
+    });
+  }
 }

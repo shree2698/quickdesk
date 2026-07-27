@@ -15,6 +15,7 @@ import { TicketQueryDto } from './dto/ticket-query.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdatePriorityDto } from './dto/update-priority.dto';
 import { SendReplyDto } from './dto/send-reply.dto';
+import { ResolveTicketDto } from './dto/resolve-ticket.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -90,8 +91,8 @@ export class TicketsController {
     return this.ticketsService.updatePriority(id, agentId, dto);
   }
 
-  @ApiOperation({ summary: 'Send reply and resolve ticket (Agent/Admin only)' })
-  @ApiResponse({ status: 200, description: 'Final reply saved and status changed to RESOLVED' })
+  @ApiOperation({ summary: 'Send reply to ticket (Agent/Admin only)' })
+  @ApiResponse({ status: 200, description: 'Reply saved as message and ticket status set to IN_PROGRESS' })
   @Roles(Role.AGENT, Role.ADMIN)
   @Post(':id/reply')
   async sendReply(
@@ -100,6 +101,18 @@ export class TicketsController {
     @Body() dto: SendReplyDto,
   ) {
     return this.ticketsService.sendReply(id, agentId, dto);
+  }
+
+  @ApiOperation({ summary: 'Resolve ticket (Agent/Admin only)' })
+  @ApiResponse({ status: 200, description: 'Final resolution saved and ticket status set to RESOLVED' })
+  @Roles(Role.AGENT, Role.ADMIN)
+  @Post(':id/resolve')
+  async resolveTicket(
+    @Param('id') id: string,
+    @GetUser('id') agentId: string,
+    @Body() dto: ResolveTicketDto,
+  ) {
+    return this.ticketsService.resolveTicket(id, agentId, dto);
   }
 
   @ApiOperation({ summary: 'Get override audit logs for a ticket (Agent/Admin only)' })
