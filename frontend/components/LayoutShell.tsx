@@ -116,6 +116,20 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                 <BarChart3 className="w-4 h-4" />
                 Metrics Dashboard
               </Link>
+
+              {user.role === 'ADMIN' && (
+                <Link
+                  href="/admin/knowledge"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    pathname.startsWith('/admin/knowledge')
+                      ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                      : 'text-slate-400 hover:bg-[#1a2332] hover:text-white'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Knowledge Base (RAG)
+                </Link>
+              )}
             </>
           )}
         </nav>

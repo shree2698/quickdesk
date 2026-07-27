@@ -76,10 +76,10 @@ Respond ONLY in valid JSON format:
    */
   async generateCopilotDraft(ticketTitle: string, ticketDescription: string) {
     const query = `${ticketTitle} ${ticketDescription}`;
-    const relevantChunks = await this.ragService.searchSimilarChunks(query, 3);
+    const relevantChunks = await this.ragService.answerQuestion(query);
 
-    const contextText = relevantChunks
-      .map((c) => `[Article: ${c.articleTitle}]\n"${c.content}"`)
+    const contextText = relevantChunks.sources
+      .map((c) => `[Snippet]\n"${c.content}"`)
       .join('\n\n');
 
     const prompt = `You are QuickDesk Agent Copilot AI.
@@ -114,9 +114,9 @@ IMPORTANT: If the provided Internal Guides are empty or do not contain the neces
       suggestion = `Hello,\n\nThank you for reaching out regarding "${ticketTitle}". Here are the relevant guide details:\n\n${contextText}`;
     }
 
-    const citations = relevantChunks.map((c) => ({
-      articleId: c.articleId,
-      title: c.articleTitle,
+    const citations = relevantChunks.sources.map((c) => ({
+      articleId: c.metadata.knowledgeBaseId || '',
+      title: c.metadata.filename || 'Knowledge Base',
       snippet: c.content.substring(0, 100) + '...',
     }));
 

@@ -24,7 +24,13 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@google/genai": "^2.13.0",
+    "@langchain/google-genai": "^0.2.14",
+    "@nestjs/bullmq": "^11.0.2",
+    "@types/multer": "^1.4.12",
+    "@types/pdf-parse": "^1.1.4",
+    "bullmq": "^5.41.6",
+    "mammoth": "^1.9.0",
+    "pdf-parse": "^1.1.1",
     "@langchain/community": "^1.1.29",
     "@langchain/core": "^1.2.3",
     "@nestjs/common": "^11.0.1",

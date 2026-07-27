@@ -9,6 +9,10 @@ import { AiModule } from './ai/ai.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { MetricsModule } from './metrics/metrics.module';
 
+import { KnowledgeModule } from './knowledge/knowledge.module';
+import { QueueModule } from './queue/queue.module';
+import { StorageModule } from './storage/storage.module';
+
 @Module({
   imports: [
     PrismaModule,
@@ -17,6 +21,9 @@ import { MetricsModule } from './metrics/metrics.module';
     AiModule,
     RealtimeModule,
     MetricsModule,
+    StorageModule,
+    QueueModule,
+    KnowledgeModule,
   ],
   controllers: [AppController],
   providers: [

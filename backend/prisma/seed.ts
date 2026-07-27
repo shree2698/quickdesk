@@ -119,14 +119,22 @@ async function main() {
       const content = fs.readFileSync(filePath, 'utf-8');
       const title = file.replace('.md', '').replace(/-/g, ' ').toUpperCase();
 
-      const article = await prisma.knowledgeArticle.upsert({
-        where: { filename: file },
+      const article = await prisma.knowledgeBase.upsert({
+        where: { id: `seed-${file}` },
         update: { title },
-        create: { title, filename: file },
+        create: {
+          id: `seed-${file}`,
+          title,
+          filename: file,
+          mimeType: 'text/markdown',
+          storagePath: filePath,
+          status: 'INDEXED',
+          uploadedBy: admin.id,
+        },
       });
 
       const docs = await splitter.createDocuments([content]);
-      await prisma.knowledgeArticleChunk.deleteMany({ where: { articleId: article.id } });
+      await prisma.knowledgeBaseChunk.deleteMany({ where: { knowledgeBaseId: article.id } });
 
       for (let i = 0; i < docs.length; i++) {
         const chunkText = docs[i].pageContent;
@@ -144,9 +152,9 @@ async function main() {
           }
         }
 
-        const chunk = await prisma.knowledgeArticleChunk.create({
+        const chunk = await prisma.knowledgeBaseChunk.create({
           data: {
-            articleId: article.id,
+            knowledgeBaseId: article.id,
             content: chunkText,
             chunkIndex: i,
           },
@@ -155,7 +163,7 @@ async function main() {
         if (embeddingVector && embeddingVector.length > 0) {
           const vectorStr = `[${embeddingVector.join(',')}]`;
           await prisma.$executeRawUnsafe(
-            `UPDATE "KnowledgeArticleChunk" SET embedding = $1::vector WHERE id = $2`,
+            `UPDATE "knowledge_base_chunks" SET embedding = $1::vector WHERE id = $2`,
             vectorStr,
             chunk.id,
           );
