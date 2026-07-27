@@ -1,4 +1,6 @@
 import { PrismaClient, Role, TicketStatus, TicketCategory, TicketPriority } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -21,8 +23,14 @@ while (currentDir) {
   currentDir = parentDir;
 }
 
-// Use the standard PrismaClient (driver adapters are optional at seed time)
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is not defined.');
+}
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // ---------------------------------------------------------------------------
 // 2. Embedding helper — matches runtime VectorStoreService config
