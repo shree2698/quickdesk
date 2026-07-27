@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { api } from '@/lib/api';
 import { Bot, Send, Sparkles, FileText, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+import { MarkdownViewer } from '@/components/ui/MarkdownViewer';
 
 export default function AiAssistantPage() {
   const [query, setQuery] = useState('');
@@ -75,7 +76,7 @@ export default function AiAssistantPage() {
                       : 'bg-[#131a27] text-slate-200 border border-[#2a364f] rounded-bl-none'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <MarkdownViewer content={msg.text} />
 
                   {msg.citations && msg.citations.length > 0 && (
                     <div className="pt-2 border-t border-[#2a364f] space-y-1.5">

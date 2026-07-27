@@ -16,6 +16,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import Link from 'next/link';
+import { MarkdownViewer } from '@/components/ui/MarkdownViewer';
 
 export default function AgentTicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -229,7 +230,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
 
             {copilotDraft ? (
               <div className="p-4 rounded-xl bg-[#131a27] border border-[#2a364f] space-y-3">
-                <p className="text-xs text-slate-300 whitespace-pre-wrap">{copilotDraft}</p>
+                <MarkdownViewer content={copilotDraft} className="text-xs text-slate-300" />
 
                 {copilotCitations && copilotCitations.length > 0 && (
                   <div className="pt-2 border-t border-[#2a364f] space-y-1">
