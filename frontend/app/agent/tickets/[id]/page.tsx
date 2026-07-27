@@ -206,22 +206,22 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
       <div>
         <Link
           href="/agent/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-blue-400 transition-colors mb-3"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors mb-3"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Ticket Queue
         </Link>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white tracking-tight">{ticket.title}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{ticket.title}</h1>
           <span
             className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
               ticket.status === 'RESOLVED'
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
             }`}
           >
             {ticket.status === 'RESOLVED' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
@@ -231,7 +231,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-3">
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -242,26 +242,26 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
         <div className="lg:col-span-2 space-y-6">
           {/* Original Ticket Description Card */}
           <div className="glass-panel p-6 rounded-2xl space-y-4">
-            <div className="flex items-center gap-3 text-xs text-slate-400 border-b border-[#2a364f] pb-3">
-              <User className="w-4 h-4 text-blue-400" />
+            <div className="flex items-center gap-3 text-xs text-slate-500 border-b border-slate-200 pb-3">
+              <User className="w-4 h-4 text-blue-600" />
               <span>
-                Employee: <strong className="text-white">{ticket.employee?.name}</strong> ({ticket.employee?.email})
+                Employee: <strong className="text-slate-900">{ticket.employee?.name}</strong> ({ticket.employee?.email})
               </span>
             </div>
 
-            <p className="text-sm text-slate-200 whitespace-pre-wrap">{ticket.description}</p>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">{ticket.description}</p>
 
             {ticket.attachmentFilename && (
-              <div className="pt-3 text-xs text-slate-400">
-                Attachment: <span className="text-blue-400 font-medium">📎 {ticket.attachmentFilename}</span>
+              <div className="pt-3 text-xs text-slate-500 border-t border-slate-100">
+                Attachment: <span className="text-blue-600 font-medium">📎 {ticket.attachmentFilename}</span>
               </div>
             )}
           </div>
 
           {/* AI Copilot Suggestion Pane */}
-          <div className="glass-panel p-6 rounded-2xl border border-blue-500/30 bg-blue-500/5 space-y-4">
+          <div className="glass-panel p-6 rounded-2xl border border-blue-200 bg-blue-50/40 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-blue-400 font-semibold text-sm">
+              <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm">
                 <Bot className="w-5 h-5" />
                 AI Copilot Draft Assistant
               </div>
@@ -269,7 +269,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
               <button
                 onClick={handleGenerateCopilot}
                 disabled={copilotLoading}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors shadow flex items-center gap-1.5 disabled:opacity-50"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 {copilotLoading ? 'Generating...' : 'Generate AI Draft'}
@@ -277,17 +277,17 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
             </div>
 
             {copilotDraft ? (
-              <div className="p-4 rounded-xl bg-[#131a27] border border-[#2a364f] space-y-3">
-                <MarkdownViewer content={copilotDraft} className="text-xs text-slate-300" />
+              <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3 shadow-2xs">
+                <MarkdownViewer content={copilotDraft} className="text-xs text-slate-800" />
 
                 {((copilotCitations && copilotCitations.length > 0) || (ticket?.ragCitations && ticket.ragCitations.length > 0)) && (
-                  <div className="pt-2 border-t border-[#2a364f] space-y-1">
-                    <span className="text-[10px] uppercase font-semibold text-blue-400 tracking-wider">
+                  <div className="pt-2 border-t border-slate-100 space-y-1">
+                    <span className="text-[10px] uppercase font-semibold text-blue-600 tracking-wider">
                       Grounding Citations:
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {(copilotCitations.length > 0 ? copilotCitations : ticket.ragCitations).map((c: any, i: number) => (
-                        <span key={i} className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 flex items-center gap-1">
+                        <span key={i} className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[10px] text-blue-700 flex items-center gap-1 font-medium">
                           <FileText className="w-3 h-3" />
                           {typeof c === 'string' ? c : c.title || 'Knowledge Base'}
                         </span>
@@ -299,12 +299,12 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
                 <button
                   type="button"
                   onClick={() => handleUseDraft(copilotDraft)}
-                  className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors cursor-pointer bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg"
+                  className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-semibold transition-colors cursor-pointer bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg"
                 >
                   {draftCopied ? (
                     <>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400 font-semibold">Copied to reply editor below!</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-semibold">Copied to reply editor below!</span>
                     </>
                   ) : (
                     <>
@@ -315,7 +315,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
                 </button>
               </div>
             ) : (
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Click "Generate AI Draft" to use RAG grounding over internal Knowledge Base guides.
               </p>
             )}
@@ -324,10 +324,10 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
           {/* Reply Editor & Separate Actions */}
           {ticket.status !== 'RESOLVED' ? (
             <form onSubmit={handleSendReply} className="glass-panel p-6 rounded-2xl space-y-4">
-              <h3 className="font-semibold text-white text-sm flex items-center justify-between">
+              <h3 className="font-semibold text-slate-900 text-sm flex items-center justify-between">
                 <span>Agent Reply Editor</span>
                 {draftCopied && (
-                  <span className="text-xs text-emerald-400 font-medium animate-pulse">
+                  <span className="text-xs text-emerald-600 font-medium animate-pulse">
                     ✓ Populated from AI Draft
                   </span>
                 )}
@@ -339,7 +339,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
                 onChange={(e) => setReplyText(e.target.value)}
                 rows={4}
                 placeholder="Type a chat reply or edit AI draft here..."
-                className="w-full px-4 py-3 bg-[#131a27] border border-[#2a364f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm transition-all"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-sm transition-all shadow-2xs"
               />
 
               <div className="flex items-center gap-3 pt-2">
@@ -347,7 +347,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
                 <button
                   type="submit"
                   disabled={replyLoading || !replyText.trim()}
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-600/20 text-xs disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-xs text-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {replyLoading ? 'Sending Reply...' : 'Send Reply Message'}
@@ -358,7 +358,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
                   type="button"
                   onClick={handleResolveTicket}
                   disabled={resolveLoading}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-emerald-600/20 text-xs disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors shadow-xs text-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   {resolveLoading ? 'Resolving...' : 'Mark Ticket Resolved'}
@@ -366,20 +366,20 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
               </div>
             </form>
           ) : (
-            <div className="glass-panel p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-3">
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">
+            <div className="glass-panel p-6 rounded-2xl border border-emerald-200 bg-emerald-50/50 space-y-3">
+              <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider block">
                 Final Sent Resolution Reply:
               </span>
-              <MarkdownViewer content={ticket.finalReply || 'Ticket resolved.'} className="text-sm text-slate-200" />
+              <MarkdownViewer content={ticket.finalReply || 'Ticket resolved.'} className="text-sm text-slate-800" />
 
               {ticket.ragCitations && ticket.ragCitations.length > 0 && (
-                <div className="pt-2 border-t border-emerald-500/20 space-y-1">
-                  <span className="text-[10px] uppercase font-semibold text-emerald-400 tracking-wider">
+                <div className="pt-2 border-t border-emerald-200 space-y-1">
+                  <span className="text-[10px] uppercase font-semibold text-emerald-700 tracking-wider">
                     Resolved Grounding Citations:
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {ticket.ragCitations.map((c: string, i: number) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1">
+                      <span key={i} className="px-2 py-0.5 rounded bg-emerald-100 border border-emerald-300 text-[10px] text-emerald-800 flex items-center gap-1 font-medium">
                         <FileText className="w-3 h-3" />
                         {c}
                       </span>
@@ -395,15 +395,15 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
         <div className="space-y-6">
           {/* Agent Override Controls */}
           <div className="glass-panel p-6 rounded-2xl space-y-4">
-            <h3 className="font-semibold text-white text-sm">AI Override Controls</h3>
+            <h3 className="font-semibold text-slate-900 text-sm">AI Override Controls</h3>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Category</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1.5">Category</label>
               <select
                 value={category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 disabled={overrideLoading}
-                className="w-full px-3 py-2 bg-[#131a27] border border-[#2a364f] rounded-xl text-xs text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600 shadow-2xs"
               >
                 <option value="IT">IT</option>
                 <option value="HR">HR</option>
@@ -414,12 +414,12 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Priority</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1.5">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => handlePriorityChange(e.target.value)}
                 disabled={overrideLoading}
-                className="w-full px-3 py-2 bg-[#131a27] border border-[#2a364f] rounded-xl text-xs text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600 shadow-2xs"
               >
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -431,25 +431,25 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
 
           {/* Audit Trail Section */}
           <div className="glass-panel p-6 rounded-2xl space-y-4">
-            <h3 className="font-semibold text-white text-sm flex items-center gap-2">
-              <History className="w-4 h-4 text-blue-400" />
+            <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
+              <History className="w-4 h-4 text-blue-600" />
               Override Audit Trail
             </h3>
 
             {auditLogs.length === 0 ? (
-              <p className="text-xs text-slate-500">No category or priority overrides recorded.</p>
+              <p className="text-xs text-slate-400">No category or priority overrides recorded.</p>
             ) : (
               <div className="space-y-3">
                 {auditLogs.map((log) => (
-                  <div key={log.id} className="p-3 rounded-xl bg-[#131a27] border border-[#2a364f] text-xs space-y-1">
-                    <div className="flex justify-between text-slate-400">
+                  <div key={log.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+                    <div className="flex justify-between text-slate-500 font-medium">
                       <span>{log.changedBy?.name}</span>
                       <span>{new Date(log.createdAt).toLocaleTimeString()}</span>
                     </div>
-                    <div className="text-white">
-                      Changed <strong className="text-blue-400">{log.field}</strong> from{' '}
-                      <span className="text-slate-400">{log.oldValue}</span> →{' '}
-                      <span className="text-emerald-400">{log.newValue}</span>
+                    <div className="text-slate-800">
+                      Changed <strong className="text-blue-600">{log.field}</strong> from{' '}
+                      <span className="text-slate-500 font-medium">{log.oldValue}</span> →{' '}
+                      <span className="text-emerald-600 font-semibold">{log.newValue}</span>
                     </div>
                   </div>
                 ))}
