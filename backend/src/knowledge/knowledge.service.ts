@@ -69,8 +69,33 @@ export class KnowledgeService {
     return kb;
   }
 
-  async findAll(): Promise<KnowledgeBase[]> {
-    return this.prisma.knowledgeBase.findMany({
+  async findAll(page?: number, limit?: number): Promise<any> {
+    if (page && limit) {
+      const skip = (page - 1) * limit;
+      const [data, total] = await Promise.all([
+        this.prisma.knowledgeBase.findMany({
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            uploader: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        }),
+        this.prisma.knowledgeBase.count(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
+
+    const data = await this.prisma.knowledgeBase.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         uploader: {
@@ -78,6 +103,14 @@ export class KnowledgeService {
         },
       },
     });
+
+    return {
+      data,
+      total: data.length,
+      page: 1,
+      limit: data.length || 1,
+      totalPages: 1,
+    };
   }
 
   async findOne(id: string): Promise<KnowledgeBase> {

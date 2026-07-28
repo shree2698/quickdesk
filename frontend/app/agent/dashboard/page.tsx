@@ -17,6 +17,7 @@ import { Pagination } from '@/components/ui/Pagination';
 
 export default function AgentDashboardPage() {
   const [tickets, setTickets] = useState<any[]>([]);
+  const [totalTickets, setTotalTickets] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -27,10 +28,23 @@ export default function AgentDashboardPage() {
   const pageSize = 6;
   const { socket } = useSocket();
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (page = currentPage) => {
+    setLoading(true);
     try {
-      const res = await api.get('/tickets');
-      setTickets(res.data);
+      const params: any = { page, limit: pageSize };
+      if (statusFilter) params.status = statusFilter;
+      if (categoryFilter) params.category = categoryFilter;
+      if (priorityFilter) params.priority = priorityFilter;
+      if (search) params.search = search;
+
+      const res = await api.get('/tickets', { params });
+      if (res.data && Array.isArray(res.data.data)) {
+        setTickets(res.data.data);
+        setTotalTickets(res.data.total);
+      } else if (Array.isArray(res.data)) {
+        setTickets(res.data);
+        setTotalTickets(res.data.length);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch ticket queue');
     } finally {
@@ -39,55 +53,10 @@ export default function AgentDashboardPage() {
   };
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    fetchTickets(currentPage);
+  }, [currentPage, search, statusFilter, categoryFilter, priorityFilter]);
 
-  // Reset to page 1 whenever filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter, categoryFilter, priorityFilter]);
-
-  // Real-time socket events
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('ticket:created', (newTicket: any) => {
-      setTickets((prev) => [newTicket, ...prev]);
-    });
-
-    socket.on('ticket:updated', (updatedTicket: any) => {
-      setTickets((prev) =>
-        prev.map((t) => (t.id === updatedTicket.id ? { ...t, ...updatedTicket } : t)),
-      );
-    });
-
-    socket.on('ticket:resolved', (resolvedTicket: any) => {
-      setTickets((prev) =>
-        prev.map((t) => (t.id === resolvedTicket.id ? { ...t, ...resolvedTicket } : t)),
-      );
-    });
-
-    return () => {
-      socket.off('ticket:created');
-      socket.off('ticket:updated');
-      socket.off('ticket:resolved');
-    };
-  }, [socket]);
-
-  // Client-side filtering logic
-  const filteredTickets = tickets.filter((t) => {
-    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
-    if (statusFilter && t.status !== statusFilter) return false;
-    if (categoryFilter && t.category !== categoryFilter) return false;
-    if (priorityFilter && t.priority !== priorityFilter) return false;
-    return true;
-  });
-
-  const totalPages = Math.ceil(filteredTickets.length / pageSize);
-  const paginatedTickets = filteredTickets.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const totalPages = Math.ceil(totalTickets / pageSize);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -169,14 +138,14 @@ export default function AgentDashboardPage() {
         <div className="flex items-center justify-center p-12 text-slate-500">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      ) : filteredTickets.length === 0 ? (
+      ) : tickets.length === 0 ? (
         <div className="glass-panel p-12 text-center rounded-2xl text-slate-500">
           No tickets found matching the selected filters.
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid gap-4">
-            {paginatedTickets.map((ticket) => (
+            {tickets.map((ticket) => (
               <Link
                 key={ticket.id}
                 href={`/agent/tickets/${ticket.id}`}
@@ -189,8 +158,11 @@ export default function AgentDashboardPage() {
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
                       Submitted by{' '}
-                      <span className="text-slate-700 font-semibold">{ticket.user?.name}</span> (
-                      {ticket.user?.email}) on {new Date(ticket.createdAt).toLocaleDateString()}
+                      <span className="text-slate-700 font-semibold">
+                        {ticket.employee?.name || ticket.user?.name || 'Employee'}
+                      </span>{' '}
+                      ({ticket.employee?.email || ticket.user?.email || 'N/A'}) on{' '}
+                      {new Date(ticket.createdAt).toLocaleDateString()}
                     </p>
                   </div>
 
@@ -230,9 +202,9 @@ export default function AgentDashboardPage() {
                     Priority: {ticket.priority}
                   </span>
 
-                  {ticket.assignedTo && (
+                  {ticket.agent && (
                     <span className="text-slate-500 text-xs ml-auto">
-                      Assigned to: <strong className="text-slate-700">{ticket.assignedTo.name}</strong>
+                      Assigned to: <strong className="text-slate-700">{ticket.agent.name}</strong>
                     </span>
                   )}
                 </div>
@@ -243,7 +215,7 @@ export default function AgentDashboardPage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={filteredTickets.length}
+            totalItems={totalTickets}
             pageSize={pageSize}
             onPageChange={(page) => setCurrentPage(page)}
           />

@@ -22,6 +22,7 @@ import { Pagination } from '@/components/ui/Pagination';
 
 export default function MyTicketsPage() {
   const [tickets, setTickets] = useState<any[]>([]);
+  const [totalTickets, setTotalTickets] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
@@ -32,10 +33,19 @@ export default function MyTicketsPage() {
   const pageSize = 5;
   const { socket } = useSocket();
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (page = currentPage) => {
+    setLoading(true);
     try {
-      const res = await api.get('/tickets');
-      setTickets(res.data);
+      const res = await api.get('/tickets', {
+        params: { page, limit: pageSize },
+      });
+      if (res.data && Array.isArray(res.data.data)) {
+        setTickets(res.data.data);
+        setTotalTickets(res.data.total);
+      } else if (Array.isArray(res.data)) {
+        setTickets(res.data);
+        setTotalTickets(res.data.length);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load tickets');
     } finally {
@@ -82,38 +92,10 @@ export default function MyTicketsPage() {
   };
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    fetchTickets(currentPage);
+  }, [currentPage]);
 
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('ticket:resolved', (resolvedTicket: any) => {
-      setTickets((prev) =>
-        prev.map((t) => (t.id === resolvedTicket.id ? { ...t, ...resolvedTicket } : t)),
-      );
-      setDetailedTickets((prev) =>
-        prev[resolvedTicket.id] ? { ...prev, [resolvedTicket.id]: resolvedTicket } : prev,
-      );
-    });
-
-    socket.on('ticket:updated', (updatedTicket: any) => {
-      setTickets((prev) =>
-        prev.map((t) => (t.id === updatedTicket.id ? { ...t, ...updatedTicket } : t)),
-      );
-      setDetailedTickets((prev) =>
-        prev[updatedTicket.id] ? { ...prev, [updatedTicket.id]: updatedTicket } : prev,
-      );
-    });
-
-    return () => {
-      socket.off('ticket:resolved');
-      socket.off('ticket:updated');
-    };
-  }, [socket]);
-
-  const totalPages = Math.ceil(tickets.length / pageSize);
-  const paginatedTickets = tickets.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(totalTickets / pageSize);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -164,7 +146,7 @@ export default function MyTicketsPage() {
       ) : (
         <div className="space-y-4">
           <div className="grid gap-4">
-            {paginatedTickets.map((ticket) => {
+            {tickets.map((ticket) => {
               const isExpanded = expandedTicketId === ticket.id;
               const detail = detailedTickets[ticket.id] || ticket;
               const messagesList = detail.messages || [];
@@ -323,7 +305,7 @@ export default function MyTicketsPage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={tickets.length}
+            totalItems={totalTickets}
             pageSize={pageSize}
             onPageChange={(page) => setCurrentPage(page)}
           />

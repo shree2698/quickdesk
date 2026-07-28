@@ -17,19 +17,25 @@ export interface KnowledgeDocument {
 
 interface KnowledgeListProps {
   documents: KnowledgeDocument[];
+  totalDocuments: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
   onReindex: (id: string) => void;
   onDelete: (id: string) => void;
   loading: boolean;
 }
 
-export function KnowledgeList({ documents, onReindex, onDelete, loading }: KnowledgeListProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [documents.length]);
-
+export function KnowledgeList({
+  documents,
+  totalDocuments,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onReindex,
+  onDelete,
+  loading,
+}: KnowledgeListProps) {
   const getBadgeStyle = (status: string) => {
     switch (status) {
       case 'INDEXED':
@@ -64,8 +70,7 @@ export function KnowledgeList({ documents, onReindex, onDelete, loading }: Knowl
     );
   }
 
-  const totalPages = Math.ceil(documents.length / pageSize);
-  const paginatedDocs = documents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(totalDocuments / pageSize);
 
   return (
     <div className="space-y-4">
@@ -82,7 +87,7 @@ export function KnowledgeList({ documents, onReindex, onDelete, loading }: Knowl
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {paginatedDocs.map((doc) => (
+            {documents.map((doc) => (
               <tr key={doc.id} className="hover:bg-slate-800/40 transition-colors">
                 <td className="px-6 py-4 font-medium text-slate-100">{doc.title}</td>
                 <td className="px-6 py-4 text-slate-400 font-mono text-xs">{doc.filename}</td>
@@ -133,9 +138,9 @@ export function KnowledgeList({ documents, onReindex, onDelete, loading }: Knowl
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        totalItems={documents.length}
+        totalItems={totalDocuments}
         pageSize={pageSize}
-        onPageChange={(page) => setCurrentPage(page)}
+        onPageChange={onPageChange}
       />
     </div>
   );

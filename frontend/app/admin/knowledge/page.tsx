@@ -7,31 +7,42 @@ import { api } from '@/lib/api';
 
 export default function AdminKnowledgePage() {
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
+  const [totalDocuments, setTotalDocuments] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchDocuments = useCallback(async () => {
+  const fetchDocuments = useCallback(async (page = currentPage) => {
     try {
-      const res = await api.get('/knowledge');
-      setDocuments(res.data);
+      const res = await api.get('/knowledge', {
+        params: { page, limit: pageSize },
+      });
+      if (res.data && Array.isArray(res.data.data)) {
+        setDocuments(res.data.data);
+        setTotalDocuments(res.data.total);
+      } else if (Array.isArray(res.data)) {
+        setDocuments(res.data);
+        setTotalDocuments(res.data.length);
+      }
     } catch (err) {
       console.error('Failed to fetch knowledge base documents', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
-    fetchDocuments();
+    fetchDocuments(currentPage);
     // Poll status every 4 seconds to reflect async processing updates seamlessly
-    const interval = setInterval(fetchDocuments, 4000);
+    const interval = setInterval(() => fetchDocuments(currentPage), 4000);
     return () => clearInterval(interval);
-  }, [fetchDocuments]);
+  }, [fetchDocuments, currentPage]);
 
   const handleReindex = async (id: string) => {
     try {
       await api.post(`/knowledge/${id}/reindex`);
-      fetchDocuments();
+      fetchDocuments(currentPage);
     } catch (err) {
       console.error('Failed to trigger re-index', err);
     }
@@ -41,7 +52,7 @@ export default function AdminKnowledgePage() {
     if (!confirm('Are you sure you want to delete this Knowledge Base document?')) return;
     try {
       await api.delete(`/knowledge/${id}`);
-      fetchDocuments();
+      fetchDocuments(currentPage);
     } catch (err) {
       console.error('Failed to delete document', err);
     }
@@ -71,6 +82,10 @@ export default function AdminKnowledgePage() {
         {/* Document List Table */}
         <KnowledgeList
           documents={documents}
+          totalDocuments={totalDocuments}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={(page) => setCurrentPage(page)}
           onReindex={handleReindex}
           onDelete={handleDelete}
           loading={loading}
@@ -80,7 +95,7 @@ export default function AdminKnowledgePage() {
         <KnowledgeUploadModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSuccess={fetchDocuments}
+          onSuccess={() => fetchDocuments(currentPage)}
         />
       </div>
     </div>

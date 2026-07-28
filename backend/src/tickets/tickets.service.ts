@@ -78,7 +78,39 @@ export class TicketsService {
       };
     }
 
-    return this.prisma.ticket.findMany({
+    const page = query.page ? Number(query.page) : undefined;
+    const limit = query.limit ? Number(query.limit) : undefined;
+
+    if (page && limit) {
+      const skip = (page - 1) * limit;
+      const [data, total] = await Promise.all([
+        this.prisma.ticket.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            employee: {
+              select: { id: true, name: true, email: true },
+            },
+            agent: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        }),
+        this.prisma.ticket.count({ where }),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
+
+    const data = await this.prisma.ticket.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -90,6 +122,14 @@ export class TicketsService {
         },
       },
     });
+
+    return {
+      data,
+      total: data.length,
+      page: 1,
+      limit: data.length || 1,
+      totalPages: 1,
+    };
   }
 
   async findOne(id: string, user: { id: string; role: Role }) {

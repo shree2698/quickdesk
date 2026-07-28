@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Body,
+  Query,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
@@ -43,9 +44,9 @@ export class KnowledgeController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all Knowledge Base documents' })
-  async findAll() {
-    return this.knowledgeService.findAll();
+  @ApiOperation({ summary: 'List all Knowledge Base documents with pagination' })
+  async findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.knowledgeService.findAll(page ? Number(page) : undefined, limit ? Number(limit) : undefined);
   }
 
   @Get(':id')
