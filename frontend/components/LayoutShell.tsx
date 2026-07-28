@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Sparkles,
+  BookOpenText,
   Ticket,
   PlusCircle,
   LayoutDashboard,
@@ -13,8 +13,6 @@ import {
   LogOut,
   User,
   Bot,
-  ChevronRight,
-  ShieldCheck,
   AlertTriangle,
 } from 'lucide-react';
 
@@ -70,15 +68,12 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
       {/* 1. FIXED / STICKY SIDEBAR (h-screen sticky top-0) */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 z-40 shadow-sm">
         {/* Brand Header */}
-        <div className="p-5 border-b border-slate-200">
+        <div className="px-7 py-2 border-b border-slate-200">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-xs">
-              <Sparkles className="w-5 h-5" />
-            </div>
             <div>
               <span className="font-bold text-slate-900 tracking-tight text-base block">QuickDesk</span>
               <span className="block text-[10px] uppercase font-bold text-blue-600 tracking-wider">
-                AI Copilot Helpdesk
+                AI Helpdesk
               </span>
             </div>
           </Link>
@@ -159,8 +154,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <Sparkles className="w-4 h-4" />
-                  Knowledge Base (RAG)
+                  <BookOpenText className="w-4 h-4" />
+                  Knowledge Base
                 </Link>
               )}
             </>
@@ -196,8 +191,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 2. STICKY HEADER & BREADCRUMBS (sticky top-0 z-30) */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-8 py-3.5 flex items-center justify-between shadow-2xs">
-          {/* Breadcrumbs */}
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-8 py-3.5 flex items-center justify-end shadow-2xs">
+          {/* Breadcrumbs
           <nav className="flex items-center gap-2 text-xs font-medium text-slate-500 overflow-x-auto">
             {breadcrumbs.map((crumb, i) => (
               <React.Fragment key={crumb.href}>
@@ -211,7 +206,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                 )}
               </React.Fragment>
             ))}
-          </nav>
+          </nav> */}
 
           {/* User Badge / Status */}
           <div className="flex items-center gap-3">
