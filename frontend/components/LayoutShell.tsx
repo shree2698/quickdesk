@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,11 +15,13 @@ import {
   Bot,
   ChevronRight,
   ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const { user, logout, loading } = useAuth();
   const pathname = usePathname();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   if (loading) {
     return (
@@ -57,6 +59,11 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   };
 
   const breadcrumbs = getBreadcrumbs();
+
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirm(false);
+    logout();
+  };
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
@@ -176,9 +183,9 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             </div>
 
             <button
-              onClick={logout}
+              onClick={() => setShowLogoutConfirm(true)}
               title="Sign Out"
-              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -218,6 +225,40 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         {/* Page Content */}
         <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-sm bg-white border border-slate-200 p-6 shadow-xl space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Confirm Sign Out</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Are you sure you want to log out of QuickDesk?</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLogout}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
