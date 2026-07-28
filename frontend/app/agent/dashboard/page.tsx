@@ -13,29 +13,26 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { Pagination } from '@/components/ui/Pagination';
 
 export default function AgentDashboardPage() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
-  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
   const { socket } = useSocket();
 
   const fetchTickets = async () => {
     try {
-      const params: any = {};
-      if (statusFilter) params.status = statusFilter;
-      if (categoryFilter) params.category = categoryFilter;
-      if (priorityFilter) params.priority = priorityFilter;
-      if (search) params.search = search;
-
-      const res = await api.get('/tickets', { params });
+      const res = await api.get('/tickets');
       setTickets(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load ticket queue');
+      setError(err.response?.data?.message || 'Failed to fetch ticket queue');
     } finally {
       setLoading(false);
     }
@@ -43,30 +40,58 @@ export default function AgentDashboardPage() {
 
   useEffect(() => {
     fetchTickets();
-  }, [statusFilter, categoryFilter, priorityFilter, search]);
+  }, []);
 
-  // Real-time listener for new tickets submitted by employees
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, categoryFilter, priorityFilter]);
+
+  // Real-time socket events
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('ticket:new', (newTicket: any) => {
+    socket.on('ticket:created', (newTicket: any) => {
       setTickets((prev) => [newTicket, ...prev]);
     });
 
-    socket.on('ticket_updated', (updated: any) => {
+    socket.on('ticket:updated', (updatedTicket: any) => {
       setTickets((prev) =>
-        prev.map((t) => (t.id === updated.ticketId ? { ...t, ...updated } : t)),
+        prev.map((t) => (t.id === updatedTicket.id ? { ...t, ...updatedTicket } : t)),
+      );
+    });
+
+    socket.on('ticket:resolved', (resolvedTicket: any) => {
+      setTickets((prev) =>
+        prev.map((t) => (t.id === resolvedTicket.id ? { ...t, ...resolvedTicket } : t)),
       );
     });
 
     return () => {
-      socket.off('ticket:new');
-      socket.off('ticket_updated');
+      socket.off('ticket:created');
+      socket.off('ticket:updated');
+      socket.off('ticket:resolved');
     };
   }, [socket]);
 
+  // Client-side filtering logic
+  const filteredTickets = tickets.filter((t) => {
+    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
+    if (statusFilter && t.status !== statusFilter) return false;
+    if (categoryFilter && t.category !== categoryFilter) return false;
+    if (priorityFilter && t.priority !== priorityFilter) return false;
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredTickets.length / pageSize);
+  const paginatedTickets = filteredTickets.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
           <LayoutDashboard className="w-6 h-6 text-blue-600" />
@@ -144,31 +169,31 @@ export default function AgentDashboardPage() {
         <div className="flex items-center justify-center p-12 text-slate-500">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      ) : tickets.length === 0 ? (
+      ) : filteredTickets.length === 0 ? (
         <div className="glass-panel p-12 text-center rounded-2xl text-slate-500">
           No tickets found matching the selected filters.
         </div>
       ) : (
-        <div className="grid gap-4">
-          {tickets.map((ticket) => (
-            <Link
-              key={ticket.id}
-              href={`/agent/tickets/${ticket.id}`}
-              className="glass-panel glass-panel-hover p-6 rounded-2xl border border-slate-200 transition-all block space-y-3 shadow-2xs hover:shadow-xs"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                    <span className="font-medium text-slate-700">Raised by {ticket.employee?.name}</span>
-                    <span>•</span>
-                    <span>{new Date(ticket.createdAt).toLocaleString()}</span>
+        <div className="space-y-4">
+          <div className="grid gap-4">
+            {paginatedTickets.map((ticket) => (
+              <Link
+                key={ticket.id}
+                href={`/agent/tickets/${ticket.id}`}
+                className="glass-panel glass-panel-hover p-6 rounded-2xl border border-slate-200 transition-all block space-y-3 shadow-2xs hover:shadow-xs"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 hover:text-blue-600 transition-colors">
+                      {ticket.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Submitted by{' '}
+                      <span className="text-slate-700 font-semibold">{ticket.user?.name}</span> (
+                      {ticket.user?.email}) on {new Date(ticket.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900 hover:text-blue-600 transition-colors">
-                    {ticket.title}
-                  </h3>
-                </div>
 
-                <div className="flex items-center gap-2 shrink-0">
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
                       ticket.status === 'RESOLVED'
@@ -179,39 +204,49 @@ export default function AgentDashboardPage() {
                     {ticket.status === 'RESOLVED' ? (
                       <CheckCircle2 className="w-3.5 h-3.5" />
                     ) : (
-                      <Clock className="w-3.5 h-3.5" />
+                      <Clock className="w-3.5 h-3.5 animate-pulse" />
                     )}
                     {ticket.status}
                   </span>
                 </div>
-              </div>
 
-              <p className="text-sm text-slate-600 line-clamp-2">{ticket.description}</p>
+                <p className="text-sm text-slate-600 line-clamp-2">{ticket.description}</p>
 
-              <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100 text-xs">
-                <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-medium flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Category: {ticket.category}
-                </span>
-
-                <span
-                  className={`px-2.5 py-1 rounded-md font-medium border ${
-                    ticket.priority === 'URGENT' || ticket.priority === 'HIGH'
-                      ? 'bg-rose-50 text-rose-700 border-rose-200'
-                      : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                  }`}
-                >
-                  Priority: {ticket.priority}
-                </span>
-
-                {ticket.attachmentFilename && (
-                  <span className="text-slate-500 font-medium">
-                    📎 {ticket.attachmentFilename}
+                <div className="flex flex-wrap items-center gap-3 pt-2 text-xs">
+                  <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-medium flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Category: {ticket.category}
                   </span>
-                )}
-              </div>
-            </Link>
-          ))}
+
+                  <span
+                    className={`px-2.5 py-1 rounded-md font-medium border ${
+                      ticket.priority === 'URGENT'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200 font-bold'
+                        : ticket.priority === 'HIGH'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200 font-semibold'
+                        : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                    }`}
+                  >
+                    Priority: {ticket.priority}
+                  </span>
+
+                  {ticket.assignedTo && (
+                    <span className="text-slate-500 text-xs ml-auto">
+                      Assigned to: <strong className="text-slate-700">{ticket.assignedTo.name}</strong>
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredTickets.length}
+            pageSize={pageSize}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         </div>
       )}
     </div>

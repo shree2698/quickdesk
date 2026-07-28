@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Pagination } from '@/components/ui/Pagination';
 
 export interface KnowledgeDocument {
   id: string;
@@ -22,6 +23,13 @@ interface KnowledgeListProps {
 }
 
 export function KnowledgeList({ documents, onReindex, onDelete, loading }: KnowledgeListProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [documents.length]);
+
   const getBadgeStyle = (status: string) => {
     switch (status) {
       case 'INDEXED':
@@ -56,66 +64,79 @@ export function KnowledgeList({ documents, onReindex, onDelete, loading }: Knowl
     );
   }
 
+  const totalPages = Math.ceil(documents.length / pageSize);
+  const paginatedDocs = documents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
-    <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900/80 backdrop-blur-md">
-      <table className="w-full text-left text-sm text-slate-300">
-        <thead className="bg-slate-950/60 text-xs uppercase text-slate-400 border-b border-slate-800">
-          <tr>
-            <th className="px-6 py-4">Document Title</th>
-            <th className="px-6 py-4">Filename</th>
-            <th className="px-6 py-4">Upload Date</th>
-            <th className="px-6 py-4">Status</th>
-            <th className="px-6 py-4">Chunks</th>
-            <th className="px-6 py-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-800">
-          {documents.map((doc) => (
-            <tr key={doc.id} className="hover:bg-slate-800/40 transition-colors">
-              <td className="px-6 py-4 font-medium text-slate-100">{doc.title}</td>
-              <td className="px-6 py-4 text-slate-400 font-mono text-xs">{doc.filename}</td>
-              <td className="px-6 py-4 text-slate-400">
-                {new Date(doc.createdAt).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </td>
-              <td className="px-6 py-4">
-                <span
-                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeStyle(
-                    doc.status,
-                  )}`}
-                >
-                  {doc.status}
-                </span>
-                {doc.failureReason && (
-                  <p className="text-xs text-rose-400 mt-1 max-w-xs truncate" title={doc.failureReason}>
-                    {doc.failureReason}
-                  </p>
-                )}
-              </td>
-              <td className="px-6 py-4 font-mono">{doc.chunkCount}</td>
-              <td className="px-6 py-4 text-right space-x-2">
-                <button
-                  onClick={() => onReindex(doc.id)}
-                  disabled={doc.status === 'PROCESSING'}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-md transition-colors disabled:opacity-50"
-                >
-                  Re-index
-                </button>
-                <button
-                  onClick={() => onDelete(doc.id)}
-                  disabled={doc.status === 'PROCESSING'}
-                  className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 text-xs rounded-md border border-rose-900/80 transition-colors disabled:opacity-50"
-                >
-                  Delete
-                </button>
-              </td>
+    <div className="space-y-4">
+      <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900/80 backdrop-blur-md">
+        <table className="w-full text-left text-sm text-slate-300">
+          <thead className="bg-slate-950/60 text-xs uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th className="px-6 py-4">Document Title</th>
+              <th className="px-6 py-4">Filename</th>
+              <th className="px-6 py-4">Upload Date</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4">Chunks</th>
+              <th className="px-6 py-4 text-right">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-slate-800">
+            {paginatedDocs.map((doc) => (
+              <tr key={doc.id} className="hover:bg-slate-800/40 transition-colors">
+                <td className="px-6 py-4 font-medium text-slate-100">{doc.title}</td>
+                <td className="px-6 py-4 text-slate-400 font-mono text-xs">{doc.filename}</td>
+                <td className="px-6 py-4 text-slate-400">
+                  {new Date(doc.createdAt).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeStyle(
+                      doc.status,
+                    )}`}
+                  >
+                    {doc.status}
+                  </span>
+                  {doc.failureReason && (
+                    <p className="text-xs text-rose-400 mt-1 max-w-xs truncate" title={doc.failureReason}>
+                      {doc.failureReason}
+                    </p>
+                  )}
+                </td>
+                <td className="px-6 py-4 font-mono">{doc.chunkCount}</td>
+                <td className="px-6 py-4 text-right space-x-2">
+                  <button
+                    onClick={() => onReindex(doc.id)}
+                    disabled={doc.status === 'PROCESSING'}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-md transition-colors disabled:opacity-50"
+                  >
+                    Re-index
+                  </button>
+                  <button
+                    onClick={() => onDelete(doc.id)}
+                    disabled={doc.status === 'PROCESSING'}
+                    className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 text-xs rounded-md border border-rose-900/80 transition-colors disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={documents.length}
+        pageSize={pageSize}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
     </div>
   );
 }
