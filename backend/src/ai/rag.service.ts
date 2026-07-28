@@ -19,19 +19,37 @@ export class RagService {
   async answerQuestion(question: string): Promise<{ answer: string; sources: any[] }> {
     this.logger.log(`Executing RAG query for question: "${question}"`);
 
-    // 1. Retrieve top relevant chunks from PGVector
-    const docs: Document[] = await this.vectorStoreService.similaritySearch(question, 4);
+    let docs: Document[] = [];
+    try {
+      docs = await this.vectorStoreService.similaritySearch(question, 4);
+    } catch (searchErr: any) {
+      this.logger.warn(`Vector search failed or empty: ${searchErr.message}`);
+    }
 
     // 2. Similarity threshold check — fallback if no relevant chunks
     if (
       docs.length === 0 ||
       (docs[0].metadata?.score !== undefined && docs[0].metadata.score < 0.4)
     ) {
-      return {
-        answer:
-          "I couldn't find a direct match in our documentation. Would you like me to create a support ticket or put you in touch with an agent?",
-        sources: [],
-      };
+      // Direct conversational fallback response if no documents match
+      const fallbackPrompt = PromptTemplate.fromTemplate(
+        `You are QuickDesk AI, an internal corporate support assistant. Respond politely, helpfully, and concisely to the employee's message.\n\nUser: {question}\n\nQuickDesk AI:`,
+      );
+      try {
+        const directChain = RunnableSequence.from([
+          fallbackPrompt,
+          this.model,
+          new StringOutputParser(),
+        ]);
+        const directAnswer = await directChain.invoke({ question });
+        return { answer: directAnswer, sources: [] };
+      } catch (err: any) {
+        return {
+          answer:
+            "Hello! I am QuickDesk AI Assistant. I couldn't find a direct match in our documentation for your query. Would you like me to put you in touch with a support agent or help you submit a ticket?",
+          sources: [],
+        };
+      }
     }
 
     // 3. Build context blocks with source article titles for citations

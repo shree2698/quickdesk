@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import { Bot, Send, Sparkles, FileText, PlusCircle } from 'lucide-react';
+import { Bot, Send, FileText, PlusCircle,MessageCircleQuestionMark } from 'lucide-react';
 import Link from 'next/link';
 import { MarkdownViewer } from '@/components/ui/MarkdownViewer';
 
@@ -30,11 +30,16 @@ export default function AiAssistantPage() {
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (err: any) {
+      const serverMsg = err.response?.data?.message || err.message || '';
+      let displayError = 'Sorry, I ran into an error connecting to AI services. Please try again.';
+      if (serverMsg) {
+        displayError += ` (${serverMsg})`;
+      }
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          text: 'Sorry, I ran into an error connecting to AI services. Please try again.',
+          text: displayError,
         },
       ]);
     } finally {
@@ -47,7 +52,7 @@ export default function AiAssistantPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
           <Bot className="w-6 h-6 text-blue-600" />
-          RAG AI Virtual Assistant
+          Virtual Assistant
         </h1>
         <p className="text-sm text-slate-500 mt-1">
           Ask policy or setup questions grounded in internal company documentation with verified citations.
@@ -58,7 +63,7 @@ export default function AiAssistantPage() {
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 space-y-3">
-              <Sparkles className="w-10 h-10 text-blue-600 opacity-60" />
+              <MessageCircleQuestionMark className="w-10 h-10 text-blue-600 opacity-60" />
               <p className="text-sm max-w-sm">
                 Ask questions like "How do I setup VPN?", "What is the password reset policy?", or "How do I claim expenses?"
               </p>
