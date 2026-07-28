@@ -2,41 +2,68 @@
 
 @layer base {
   :root {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
+    --bg-primary: #fcf9f6;
+    --bg-secondary: #f4efe8;
     --bg-card: #ffffff;
-    --bg-card-hover: #f1f5f9;
-    --border-color: #e2e8f0;
-    --border-glow: #3b82f6;
+    --bg-card-hover: #f7f3ee;
+    --border-color: #e6dcce;
+    --border-glow: #8c6747;
 
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
+    --text-primary: #2c1d11;
+    --text-secondary: #5c4738;
+    --text-muted: #8c7361;
 
-    --accent-blue: #2563eb;
-    --accent-indigo: #4f46e5;
-    --accent-emerald: #059669;
-    --accent-amber: #d97706;
-    --accent-rose: #e11d48;
+    --accent-coffee: #6f4e37;
+    --accent-espresso: #3d2314;
+    --accent-latte: #c19a6b;
+    --accent-cappuccino: #a67b5b;
+    --accent-cream: #f5ebe0;
   }
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-quicksand), 'Quicksand', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Clean White Panel Utility for Light Theme */
+/* Warm Coffee Panel Utility */
 .glass-panel {
   background: #ffffff;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  border: 1px solid #e6dcce;
+  box-shadow: 0 1px 3px 0 rgb(61 35 20 / 0.05), 0 1px 2px -1px rgb(61 35 20 / 0.05);
 }
 
-.glass-panel-hover:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+/* Global Coffee Theme Overrides for Blue & Slate elements */
+.bg-slate-50 { background-color: #fcf9f6 !important; }
+.bg-white { background-color: #ffffff !important; }
+.border-slate-200 { border-color: #e6dcce !important; }
+.border-slate-100 { border-color: #efe6d9 !important; }
+
+/* Primary Coffee Buttons & Highlights */
+.bg-blue-600 { background-color: #6f4e37 !important; }
+.hover\:bg-blue-700:hover { background-color: #553a27 !important; }
+.bg-blue-50 { background-color: #f5ebe0 !important; }
+.text-blue-600 { color: #6f4e37 !important; }
+.text-blue-700 { color: #4a3324 !important; }
+.border-blue-100 { border-color: #e6dcce !important; }
+.border-blue-200 { border-color: #d6c6b2 !important; }
+.focus\:border-blue-600:focus { border-color: #6f4e37 !important; }
+.hover\:text-blue-600:hover { color: #6f4e37 !important; }
+.border-b-2.border-blue-600 { border-bottom-color: #6f4e37 !important; }
+.border-b-2.border-blue-500 { border-bottom-color: #8c6747 !important; }
+
+/* Secondary Slate Text Adjustments for Coffee Harmony */
+.text-slate-900 { color: #2c1d11 !important; }
+.text-slate-700 { color: #4a382a !important; }
+.text-slate-600 { color: #6c5443 !important; }
+.text-slate-500 { color: #8c7361 !important; }
+.text-slate-400 { color: #a8917d !important; }
+
+/* Reset border-radius throughout the application */
+*:not(.animate-spin) {
+  border-radius: 0 !important;
 }
+
