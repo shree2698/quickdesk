@@ -59,45 +59,43 @@ export default function AdminKnowledgePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-6">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">
-              Knowledge Base Management
-            </h1>
-            <p className="text-slate-400 mt-1">
-              Upload, re-index, and manage asynchronous RAG ingestion documents indexed into PGVector.
-            </p>
-          </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-sm flex items-center justify-center gap-2"
-          >
-            <span>+ Upload Document</span>
-          </button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Knowledge Base Management
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Upload, re-index, and manage asynchronous RAG ingestion documents indexed into PGVector.
+          </p>
         </div>
-
-        {/* Document List Table */}
-        <KnowledgeList
-          documents={documents}
-          totalDocuments={totalDocuments}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          onPageChange={(page) => setCurrentPage(page)}
-          onReindex={handleReindex}
-          onDelete={handleDelete}
-          loading={loading}
-        />
-
-        {/* Upload Modal */}
-        <KnowledgeUploadModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={() => fetchDocuments(currentPage)}
-        />
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span>+ Upload Document</span>
+        </button>
       </div>
+
+      {/* Document List Table */}
+      <KnowledgeList
+        documents={documents}
+        totalDocuments={totalDocuments}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={(page) => setCurrentPage(page)}
+        onReindex={handleReindex}
+        onDelete={handleDelete}
+        loading={loading}
+      />
+
+      {/* Upload Modal */}
+      <KnowledgeUploadModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => fetchDocuments(currentPage)}
+      />
     </div>
   );
 }

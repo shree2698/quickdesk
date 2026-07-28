@@ -63,7 +63,6 @@ export default function AgentDashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-          <LayoutDashboard className="w-6 h-6 text-blue-600" />
           Agent Ticket Queue
         </h1>
         <p className="text-sm text-slate-500 mt-1">

@@ -39,31 +39,31 @@ export function KnowledgeList({
   const getBadgeStyle = (status: string) => {
     switch (status) {
       case 'INDEXED':
-        return 'bg-emerald-950 text-emerald-300 border-emerald-800';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'PROCESSING':
-        return 'bg-amber-950 text-amber-300 border-amber-800 animate-pulse';
+        return 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse';
       case 'UPLOADED':
-        return 'bg-blue-950 text-blue-300 border-blue-800';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'FAILED':
-        return 'bg-rose-950 text-rose-300 border-rose-800';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
       case 'ARCHIVED':
-        return 'bg-slate-800 text-slate-400 border-slate-700';
+        return 'bg-slate-100 text-slate-600 border-slate-200';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-slate-100 text-slate-600 border-slate-200';
     }
   };
 
   if (loading && documents.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-400">Loading Knowledge Base documents...</div>
+      <div className="p-8 text-center text-slate-500">Loading Knowledge Base documents...</div>
     );
   }
 
   if (documents.length === 0) {
     return (
-      <div className="p-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-900/40">
-        <h4 className="text-lg font-semibold text-slate-200 mb-2">No documents indexed</h4>
-        <p className="text-sm text-slate-400 mb-4">
+      <div className="p-12 text-center glass-panel border border-slate-200 rounded-2xl shadow-2xs">
+        <h4 className="text-lg font-semibold text-slate-900 mb-2">No documents indexed</h4>
+        <p className="text-sm text-slate-500 mb-4">
           Upload knowledge base files to enable RAG answers for the AI Assistant.
         </p>
       </div>
@@ -74,9 +74,9 @@ export function KnowledgeList({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900/80 backdrop-blur-md">
-        <table className="w-full text-left text-sm text-slate-300">
-          <thead className="bg-slate-950/60 text-xs uppercase text-slate-400 border-b border-slate-800">
+      <div className="overflow-x-auto glass-panel border border-slate-200 rounded-2xl shadow-2xs">
+        <table className="w-full text-left text-sm text-slate-800">
+          <thead className="bg-slate-50/80 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
             <tr>
               <th className="px-6 py-4">Document Title</th>
               <th className="px-6 py-4">Filename</th>
@@ -86,12 +86,12 @@ export function KnowledgeList({
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-slate-200">
             {documents.map((doc) => (
-              <tr key={doc.id} className="hover:bg-slate-800/40 transition-colors">
-                <td className="px-6 py-4 font-medium text-slate-100">{doc.title}</td>
-                <td className="px-6 py-4 text-slate-400 font-mono text-xs">{doc.filename}</td>
-                <td className="px-6 py-4 text-slate-400">
+              <tr key={doc.id} className="hover:bg-slate-50/60 transition-colors">
+                <td className="px-6 py-4 font-semibold text-slate-900">{doc.title}</td>
+                <td className="px-6 py-4 text-slate-500 font-mono text-xs">{doc.filename}</td>
+                <td className="px-6 py-4 text-slate-600">
                   {new Date(doc.createdAt).toLocaleDateString(undefined, {
                     month: 'short',
                     day: 'numeric',
@@ -100,31 +100,31 @@ export function KnowledgeList({
                 </td>
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeStyle(
+                    className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold border ${getBadgeStyle(
                       doc.status,
                     )}`}
                   >
                     {doc.status}
                   </span>
                   {doc.failureReason && (
-                    <p className="text-xs text-rose-400 mt-1 max-w-xs truncate" title={doc.failureReason}>
+                    <p className="text-xs text-rose-600 mt-1 max-w-xs truncate" title={doc.failureReason}>
                       {doc.failureReason}
                     </p>
                   )}
                 </td>
-                <td className="px-6 py-4 font-mono">{doc.chunkCount}</td>
+                <td className="px-6 py-4 font-mono text-slate-700">{doc.chunkCount}</td>
                 <td className="px-6 py-4 text-right space-x-2">
                   <button
                     onClick={() => onReindex(doc.id)}
                     disabled={doc.status === 'PROCESSING'}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-md transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     Re-index
                   </button>
                   <button
                     onClick={() => onDelete(doc.id)}
                     disabled={doc.status === 'PROCESSING'}
-                    className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 text-xs rounded-md border border-rose-900/80 transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium border border-rose-200 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     Delete
                   </button>
