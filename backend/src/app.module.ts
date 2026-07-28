@@ -13,10 +13,13 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
 import { QueueModule } from './queue/queue.module';
 import { StorageModule } from './storage/storage.module';
 
+import { UsersModule } from './users/users.module';
+
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
+    UsersModule,
     TicketsModule,
     AiModule,
     RealtimeModule,

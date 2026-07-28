@@ -12,6 +12,7 @@ import {
   BarChart3,
   LogOut,
   User,
+  UserCog,
   Bot,
   AlertTriangle,
 } from 'lucide-react';
@@ -146,17 +147,31 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
               </Link>
 
               {user.role === 'ADMIN' && (
-                <Link
-                  href="/admin/knowledge"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    pathname.startsWith('/admin/knowledge')
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  <BookOpenText className="w-4 h-4" />
-                  Knowledge Base
-                </Link>
+                <>
+                  <Link
+                    href="/admin/agents"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      pathname.startsWith('/admin/agents')
+                        ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-xs font-semibold'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <UserCog className="w-4 h-4" />
+                    Agent & User Mgmt
+                  </Link>
+
+                  <Link
+                    href="/admin/knowledge"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      pathname.startsWith('/admin/knowledge')
+                        ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-xs font-semibold'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <BookOpenText className="w-4 h-4" />
+                    Knowledge Base
+                  </Link>
+                </>
               )}
             </>
           )}

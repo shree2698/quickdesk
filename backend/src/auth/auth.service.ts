@@ -35,7 +35,7 @@ export class AuthService {
         email: dto.email.toLowerCase(),
         passwordHash,
         name: dto.name,
-        role: dto.role || Role.EMPLOYEE,
+        role: Role.EMPLOYEE, // Public self-registration is strictly scoped to EMPLOYEE role
       },
       select: {
         id: true,

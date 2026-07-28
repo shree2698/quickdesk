@@ -10,7 +10,6 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<Role>('EMPLOYEE');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -21,7 +20,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/register', { name, email, password, role });
+      const res = await api.post('/auth/register', { name, email, password });
       login(res.data.accessToken, res.data.user);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Try again.');
@@ -98,23 +97,6 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 transition-colors shadow-2xs"
               />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-              Account Role
-            </label>
-            <div className="relative">
-              <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as Role)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600 transition-colors appearance-none shadow-2xs"
-              >
-                <option value="EMPLOYEE">Employee (Raise tickets)</option>
-                <option value="AGENT">Support Agent (Resolve tickets)</option>
-              </select>
             </div>
           </div>
 
