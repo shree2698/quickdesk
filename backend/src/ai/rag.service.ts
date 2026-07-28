@@ -52,11 +52,13 @@ export class RagService {
       }
     }
 
-    // 3. Build context blocks with source article titles for citations
+    // 3. Build concise context blocks with source article titles for citations
     const context = docs
       .map((doc) => {
-        const title = doc.metadata?.sourceTitle || doc.metadata?.title || 'Unknown Source';
-        return `Source: ${title}\n"${doc.pageContent}"`;
+        const title = doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base';
+        // Slice content to top 600 characters per chunk to conserve LLM context window tokens
+        const snippet = doc.pageContent.length > 600 ? doc.pageContent.slice(0, 600) + '...' : doc.pageContent;
+        return `[Source: ${title}]\n${snippet}`;
       })
       .join('\n\n');
 
@@ -69,20 +71,18 @@ export class RagService {
       metadata: doc.metadata,
     }));
 
-    // 4. Define RAG prompt template with citation requirements (per 05-ai-rag.md spec)
-    const promptTemplate = PromptTemplate.fromTemplate(`You are QuickDesk AI, an internal corporate support assistant.
-Answer the user's question using ONLY the context blocks below. Do not use outside knowledge.
-Cite the source article name in brackets next to the information you present.
-If the answer is not explicitly present in the context, respond: "I'm sorry, but I cannot find that information in our company documentation. Would you like me to open a ticket for you?"
-Maintain a professional, helpful corporate IT/HR support tone.
+    // 4. Concise RAG prompt template to minimize token usage
+    const promptTemplate = PromptTemplate.fromTemplate(`You are QuickDesk AI. Answer using ONLY the context chunks below.
+Cite the source article name in brackets next to information you present.
+If not in context, state: "I cannot find that in our company documentation. Would you like me to open a ticket?"
 
-[Context Chunks]
+Context:
 {context}
 
-[Question]
+Question:
 {question}
 
-[Answer]`);
+Answer:`);
 
     // 5. Construct LCEL RunnableSequence
     const chain = RunnableSequence.from([

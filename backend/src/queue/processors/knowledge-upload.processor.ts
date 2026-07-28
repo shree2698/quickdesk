@@ -6,6 +6,8 @@ import { DocumentLoaderService } from '../../knowledge/document-loader.service';
 import { VectorStoreService } from '../../knowledge/vector-store.service';
 import { KnowledgeBaseStatus } from '@prisma/client';
 
+import { StorageService } from '../../storage/storage.service';
+
 export interface KnowledgeUploadJobData {
   knowledgeBaseId: string;
 }
@@ -18,6 +20,7 @@ export class KnowledgeUploadProcessor extends WorkerHost {
     private readonly prisma: PrismaService,
     private readonly documentLoaderService: DocumentLoaderService,
     private readonly vectorStoreService: VectorStoreService,
+    private readonly storageService: StorageService,
   ) {
     super();
   }
@@ -41,9 +44,10 @@ export class KnowledgeUploadProcessor extends WorkerHost {
     });
 
     try {
-      // 1. Load document & split into LangChain documents
+      // 1. Load document & split into LangChain documents using absolute disk path
+      const absoluteDiskPath = this.storageService.getAbsolutePath(kb.storagePath);
       const docs = await this.documentLoaderService.loadAndSplit(
-        kb.storagePath,
+        absoluteDiskPath,
         kb.mimeType,
         kb.filename,
       );

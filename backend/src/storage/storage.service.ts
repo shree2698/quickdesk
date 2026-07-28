@@ -53,13 +53,28 @@ export class StorageService {
     }
   }
 
+  getAbsolutePath(filenameOrPath: string): string {
+    if (path.isAbsolute(filenameOrPath)) {
+      return filenameOrPath;
+    }
+    return path.join(this.uploadDir, filenameOrPath);
+  }
+
+  getPublicUrl(filenameOrPath: string): string {
+    const filename = path.basename(filenameOrPath);
+    const baseUrl = process.env.UPLOAD_BASE_URL || 'http://localhost:5000/uploads/knowledge-base';
+    return `${baseUrl.replace(/\/$/, '')}/${filename}`;
+  }
+
   async getFileStream(storagePath: string): Promise<Buffer> {
-    return fs.readFile(storagePath);
+    const fullPath = this.getAbsolutePath(storagePath);
+    return fs.readFile(fullPath);
   }
 
   async deleteFile(storagePath: string): Promise<void> {
     try {
-      await fs.unlink(storagePath);
+      const fullPath = this.getAbsolutePath(storagePath);
+      await fs.unlink(fullPath);
     } catch (error) {
       // Ignore if file doesn't exist
     }

@@ -44,7 +44,7 @@ export class KnowledgeService {
       await this.storageService.deleteFile(tempPath);
     }
 
-    // 4. Create Knowledge Base record with .md parameters
+    // 4. Create Knowledge Base record storing ONLY the dynamic relative filename in storagePath
     const docTitle = title || file.originalname;
     const baseNameWithoutExt = path.parse(file.originalname).name;
     const finalDisplayFilename = `${baseNameWithoutExt}.md`;
@@ -54,7 +54,7 @@ export class KnowledgeService {
         title: docTitle,
         filename: finalDisplayFilename,
         mimeType: 'text/markdown',
-        storagePath,
+        storagePath: mdFilename,
         status: KnowledgeBaseStatus.UPLOADED,
         uploadedBy: userId,
       },

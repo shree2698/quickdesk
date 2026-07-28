@@ -80,41 +80,32 @@ Respond ONLY in valid JSON format:
     employeeName = 'Employee',
     chatHistory = 'No previous messages.',
   ) {
-    const query = `${ticketTitle} ${ticketDescription} ${chatHistory.slice(-500)}`;
+    // Token optimization: limit inputs to prevent high context consumption
+    const trimmedTitle = ticketTitle.slice(0, 150);
+    const trimmedDescription = ticketDescription.slice(0, 400);
+    const trimmedHistory = chatHistory.slice(-400);
+
+    const query = `${trimmedTitle} ${trimmedDescription} ${trimmedHistory}`;
     const relevantChunks = await this.ragService.answerQuestion(query);
 
     const contextText = relevantChunks.sources
-      .map((c) => `Source: ${c.title}\n"${c.content}"`)
+      .map((c) => `[Source: ${c.title}]\n${c.content.slice(0, 450)}`)
       .join('\n\n');
 
-    const promptTemplate = PromptTemplate.fromTemplate(`
-You are QuickDesk Agent Copilot AI.
-Generate a concise, friendly, real-time CHAT MESSAGE draft for a support agent to send directly to employee "{employeeName}" in a live helpdesk chat.
+    const promptTemplate = PromptTemplate.fromTemplate(`You are QuickDesk Agent Copilot.
+Draft a concise, friendly chat reply to employee "{employeeName}".
 
-CRITICAL FORMATTING & STYLE RULES:
-1. Address employee naturally by name "{employeeName}" in a warm, direct CHAT message opening (e.g. "Hi {employeeName}, ...").
-2. DO NOT write an email! DO NOT include "Subject:", DO NOT include formal email headers, and DO NOT include formal sign-offs.
-3. Pay close attention to the ongoing Chat History (employee follow-up questions or agent updates) and directly answer the latest employee message.
-4. Use clean Markdown (short paragraphs, bullet points, bold key terms) for fast chat reading.
-5. Ground your reply strictly on the internal knowledge base articles provided below if available.
-6. If no relevant internal guides are found, address the employee's latest message directly, ask 2-3 targeted troubleshooting questions, and suggest next steps.
+Rules:
+- Address employee by name "{employeeName}" in opening.
+- Concise markdown format with key points.
+- Base response on internal guides below if relevant.
 
-[Employee Name]
-{employeeName}
+Title: {ticketTitle}
+Description: {ticketDescription}
+Chat History: {chatHistory}
+Internal Guides: {contextText}
 
-[Ticket Title]
-{ticketTitle}
-
-[Ticket Description]
-{ticketDescription}
-
-[Live Chat History (Most Recent Messages)]
-{chatHistory}
-
-[Relevant Internal Guides]
-{contextText}
-
-Generate ONLY the chat message response:`);
+Reply Draft:`);
 
     const chain = promptTemplate.pipe(this.model).pipe(new StringOutputParser());
 
@@ -122,9 +113,9 @@ Generate ONLY the chat message response:`);
     try {
       suggestion = await chain.invoke({
         employeeName,
-        ticketTitle,
-        ticketDescription,
-        chatHistory,
+        ticketTitle: trimmedTitle,
+        ticketDescription: trimmedDescription,
+        chatHistory: trimmedHistory,
         contextText: contextText || 'No relevant internal guides found.',
       });
     } catch (err: any) {
