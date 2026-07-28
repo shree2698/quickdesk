@@ -33,9 +33,6 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 text-slate-900">
       <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-blue-600 mb-4 border border-blue-100 shadow-2xs">
-            <Sparkles className="w-6 h-6" />
-          </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create your account</h1>
           <p className="text-sm text-slate-500 mt-1">Get started with QuickDesk</p>
         </div>
