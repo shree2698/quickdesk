@@ -69,8 +69,9 @@ export class RagService {
     // 3. Build concise context blocks with source article titles for citations
     const context = docs
       .map((doc) => {
+        const meta = doc.metadata as Record<string, unknown> | undefined;
         const title =
-          doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base';
+          (meta?.sourceTitle as string) || (meta?.title as string) || 'Knowledge Base';
         // Slice content to top 600 characters per chunk to conserve LLM context window tokens
         const snippet =
           doc.pageContent.length > 600

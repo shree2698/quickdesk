@@ -148,8 +148,8 @@ export class VectorStoreService {
           pageContent: r.content,
           metadata: {
             ...(typeof r.metadata === 'string'
-              ? JSON.parse(r.metadata)
-              : r.metadata),
+              ? (JSON.parse(r.metadata) as Record<string, unknown>)
+              : (r.metadata as Record<string, unknown>)),
             knowledgeBaseId: r.knowledgeBaseId,
             score: r.similarity,
           },
