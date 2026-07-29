@@ -48,16 +48,18 @@ export class VectorStoreService {
       let vectors: number[][] | null = null;
       try {
         vectors = await this.embeddings.embedDocuments(texts);
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const err = e as Error;
         this.logger.warn(
-          `Embedding batch ${i}-${i + batch.length} failed: ${e.message}. Retrying after 2s...`,
+          `Embedding batch ${i}-${i + batch.length} failed: ${err.message}. Retrying after 2s...`,
         );
         await new Promise((r) => setTimeout(r, 2000));
         try {
           vectors = await this.embeddings.embedDocuments(texts);
-        } catch (retryErr: any) {
+        } catch (retryErr: unknown) {
+          const rErr = retryErr as Error;
           this.logger.error(
-            `Embedding retry failed for batch ${i}-${i + batch.length}: ${retryErr.message}. Storing chunks without embeddings.`,
+            `Embedding retry failed for batch ${i}-${i + batch.length}: ${rErr.message}. Storing chunks without embeddings.`,
           );
         }
       }

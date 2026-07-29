@@ -91,7 +91,7 @@ export class StorageService {
     try {
       const fullPath = this.getAbsolutePath(storagePath);
       await fs.unlink(fullPath);
-    } catch (error) {
+    } catch {
       // Ignore if file doesn't exist
     }
   }

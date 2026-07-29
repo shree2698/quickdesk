@@ -65,9 +65,10 @@ Respond ONLY in valid JSON format:
 
         return { category, priority };
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       this.logger.warn(
-        `AI classification failed, falling back to defaults: ${err.message}`,
+        `AI classification failed, falling back to defaults: ${error.message}`,
       );
     }
 
@@ -125,13 +126,14 @@ Reply Draft:`);
         chatHistory: trimmedHistory,
         contextText: contextText || 'No relevant internal guides found.',
       });
-    } catch (err: any) {
-      this.logger.error(`Copilot draft generation failed: ${err.message}`);
+    } catch (err: unknown) {
+      const error = err as Error & { status?: number };
+      this.logger.error(`Copilot draft generation failed: ${error.message}`);
       const isRateLimit =
-        err.status === 429 ||
-        err.message?.includes('429') ||
-        err.message?.includes('quota') ||
-        err.message?.includes('Too Many Requests');
+        error.status === 429 ||
+        error.message?.includes('429') ||
+        error.message?.includes('quota') ||
+        error.message?.includes('Too Many Requests');
 
       if (isRateLimit) {
         suggestion = `[AI Copilot Note: Rate limit reached for AI service. Please compose your reply manually or try clicking 'Suggest Draft' again in a few seconds.]`;

@@ -12,7 +12,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdatePriorityDto } from './dto/update-priority.dto';
 import { SendReplyDto } from './dto/send-reply.dto';
 import { ResolveTicketDto } from './dto/resolve-ticket.dto';
-import { Role, TicketStatus } from '@prisma/client';
+import { Role, TicketStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class TicketsService {
@@ -56,7 +56,7 @@ export class TicketsService {
   }
 
   async findAll(user: { id: string; role: Role }, query: TicketQueryDto) {
-    const where: any = {};
+    const where: Prisma.TicketWhereInput = {};
 
     if (user.role === Role.EMPLOYEE) {
       where.employeeId = user.id;
@@ -249,7 +249,7 @@ export class TicketsService {
       );
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.TicketUpdateInput = {};
 
     if (role === Role.AGENT || role === Role.ADMIN) {
       updateData.agentId = userId;
@@ -305,7 +305,7 @@ export class TicketsService {
     const resolutionSummary =
       dto.finalReply || ticket.finalReply || 'Ticket marked resolved by agent.';
 
-    const updateData: any = {
+    const updateData: Prisma.TicketUpdateInput = {
       finalReply: resolutionSummary,
       status: TicketStatus.RESOLVED,
       agentId,

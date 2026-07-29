@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -109,7 +109,7 @@ export class UsersService {
       }
     }
 
-    const data: any = {
+    const data: Prisma.UserUpdateInput = {
       ...(dto.name && { name: dto.name }),
       ...(dto.email && { email: dto.email.toLowerCase() }),
       ...(dto.role && { role: dto.role }),

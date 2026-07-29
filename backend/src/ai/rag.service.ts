@@ -27,14 +27,16 @@ export class RagService {
     let docs: Document[] = [];
     try {
       docs = await this.vectorStoreService.similaritySearch(question, 4);
-    } catch (searchErr: any) {
-      this.logger.warn(`Vector search failed or empty: ${searchErr.message}`);
+    } catch (searchErr: unknown) {
+      const error = searchErr as Error;
+      this.logger.warn(`Vector search failed or empty: ${error.message}`);
     }
 
     // 2. Similarity threshold check — fallback if no relevant chunks
     if (
       docs.length === 0 ||
-      (docs[0].metadata?.score !== undefined && docs[0].metadata.score < 0.4)
+      (docs[0].metadata?.score !== undefined &&
+        (docs[0].metadata.score as number) < 0.4)
     ) {
       // Direct conversational fallback response if no documents match
       const fallbackPrompt = PromptTemplate.fromTemplate(
@@ -48,7 +50,7 @@ export class RagService {
         ]);
         const directAnswer = await directChain.invoke({ question });
         return { answer: directAnswer, sources: [] };
-      } catch (err: any) {
+      } catch (err: unknown) {
         return {
           answer:
             "Hello! I am QuickDesk AI Assistant. I couldn't find a direct match in our documentation for your query. Would you like me to put you in touch with a support agent or help you submit a ticket?",
@@ -72,14 +74,19 @@ export class RagService {
       .join('\n\n');
 
     // Extract citations/sources metadata with title info
-    const sources = docs.map((doc) => ({
-      content: doc.pageContent,
-      title:
-        doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base',
-      knowledgeBaseId: doc.metadata?.knowledgeBaseId || '',
-      score: doc.metadata?.score,
-      metadata: doc.metadata,
-    }));
+    const sources = docs.map((doc) => {
+      const meta = doc.metadata as Record<string, unknown>;
+      return {
+        content: doc.pageContent,
+        title:
+          (meta?.sourceTitle as string) ||
+          (meta?.title as string) ||
+          'Knowledge Base',
+        knowledgeBaseId: (meta?.knowledgeBaseId as string) || '',
+        score: meta?.score as number | undefined,
+        metadata: meta,
+      };
+    });
 
     // 4. Concise RAG prompt template to minimize token usage
     const promptTemplate =
@@ -110,14 +117,15 @@ Answer:`);
     try {
       const answer = await chain.invoke(question);
       return { answer, sources };
-    } catch (err: any) {
-      this.logger.error(`RAG Execution error: ${err.message}`);
+    } catch (err: unknown) {
+      const error = err as Error & { status?: number };
+      this.logger.error(`RAG Execution error: ${error.message}`);
 
       const isRateLimit =
-        err.status === 429 ||
-        err.message?.includes('429') ||
-        err.message?.includes('quota') ||
-        err.message?.includes('Too Many Requests');
+        error.status === 429 ||
+        error.message?.includes('429') ||
+        error.message?.includes('quota') ||
+        error.message?.includes('Too Many Requests');
 
       if (isRateLimit) {
         return {

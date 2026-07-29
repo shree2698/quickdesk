@@ -11,7 +11,19 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
+
+interface JwtPayload {
+  sub: string;
+  email: string;
+  role: Role;
+}
+
+interface AuthenticatedSocket extends Socket {
+  data: {
+    user?: JwtPayload;
+  };
+}
 
 @WebSocketGateway({
   cors: {
@@ -29,7 +41,7 @@ export class RealtimeGateway
 
   constructor(private prisma: PrismaService) {}
 
-  async handleConnection(client: Socket) {
+  async handleConnection(client: AuthenticatedSocket) {
     try {
       const authHeader =
         client.handshake.auth?.token || client.handshake.headers?.authorization;
@@ -69,13 +81,13 @@ export class RealtimeGateway
     }
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: AuthenticatedSocket) {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('join_ticket')
   async handleJoinTicket(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { ticketId: string },
   ) {
     const user = client.data.user;
@@ -101,7 +113,7 @@ export class RealtimeGateway
 
   @SubscribeMessage('leave_ticket')
   handleLeaveTicket(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { ticketId: string },
   ) {
     if (!data.ticketId) return;
@@ -112,7 +124,7 @@ export class RealtimeGateway
 
   @SubscribeMessage('send_message')
   async handleSendMessage(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { ticketId: string; text: string },
   ) {
     const user = client.data.user;
@@ -137,7 +149,7 @@ export class RealtimeGateway
 
   @SubscribeMessage('typing_start')
   handleTypingStart(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { ticketId: string },
   ) {
     const user = client.data.user;
@@ -151,7 +163,7 @@ export class RealtimeGateway
 
   @SubscribeMessage('typing_stop')
   handleTypingStop(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { ticketId: string },
   ) {
     const user = client.data.user;
@@ -166,14 +178,14 @@ export class RealtimeGateway
   /**
    * Helper method to broadcast ticket_created to all agents
    */
-  notifyTicketCreated(ticket: any) {
+  notifyTicketCreated(ticket: Prisma.TicketGetPayload<any>) {
     this.server.to('channel-agents').emit('ticket:new', ticket);
   }
 
   /**
    * Helper method to broadcast ticket_resolved to ticket room and agent channel
    */
-  notifyTicketResolved(ticket: any) {
+  notifyTicketResolved(ticket: Prisma.TicketGetPayload<any>) {
     this.server.to(`ticket-${ticket.id}`).emit('ticket:resolved', ticket);
     this.server.to(`user-${ticket.employeeId}`).emit('ticket:resolved', ticket);
     this.server.to('channel-agents').emit('ticket_updated', {
@@ -186,7 +198,7 @@ export class RealtimeGateway
   /**
    * Helper method to broadcast ticket_updated to ticket room and agent channel
    */
-  notifyTicketUpdated(ticket: any) {
+  notifyTicketUpdated(ticket: Prisma.TicketGetPayload<any>) {
     this.server.to(`ticket-${ticket.id}`).emit('ticket:updated', ticket);
     this.server.to('channel-agents').emit('ticket_updated', {
       ticketId: ticket.id,
