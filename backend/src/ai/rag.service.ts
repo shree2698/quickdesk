@@ -50,7 +50,7 @@ export class RagService {
         ]);
         const directAnswer = await directChain.invoke({ question });
         return { answer: directAnswer, sources: [] };
-      } catch (err: unknown) {
+      } catch {
         return {
           answer:
             "Hello! I am QuickDesk AI Assistant. I couldn't find a direct match in our documentation for your query. Would you like me to put you in touch with a support agent or help you submit a ticket?",
