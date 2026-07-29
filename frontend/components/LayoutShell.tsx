@@ -37,28 +37,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   const isAgentOrAdmin = user.role === 'AGENT' || user.role === 'ADMIN';
 
-  // Generate dynamic breadcrumbs based on current pathname
-  const getBreadcrumbs = () => {
-    const segments = pathname.split('/').filter(Boolean);
-    const crumbs = [{ label: 'Home', href: '/' }];
-
-    let currentPath = '';
-    segments.forEach((segment) => {
-      currentPath += `/${segment}`;
-      let label = segment.replace(/-/g, ' ');
-      if (segment.length > 20) {
-        label = `#${segment.substring(0, 8)}...`;
-      } else {
-        label = label.charAt(0).toUpperCase() + label.slice(1);
-      }
-      crumbs.push({ label, href: currentPath });
-    });
-
-    return crumbs;
-  };
-
-  const breadcrumbs = getBreadcrumbs();
-
   const handleConfirmLogout = () => {
     setShowLogoutConfirm(false);
     logout();

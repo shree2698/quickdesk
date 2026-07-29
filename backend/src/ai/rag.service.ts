@@ -71,7 +71,9 @@ export class RagService {
       .map((doc) => {
         const meta = doc.metadata as Record<string, unknown> | undefined;
         const title =
-          (meta?.sourceTitle as string) || (meta?.title as string) || 'Knowledge Base';
+          (meta?.sourceTitle as string) ||
+          (meta?.title as string) ||
+          'Knowledge Base';
         // Slice content to top 600 characters per chunk to conserve LLM context window tokens
         const snippet =
           doc.pageContent.length > 600
