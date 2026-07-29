@@ -10,7 +10,13 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -27,14 +33,19 @@ import { Role } from '@prisma/client';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Create a new support Agent or Admin user (Admin only)' })
+  @ApiOperation({
+    summary: 'Create a new support Agent or Admin user (Admin only)',
+  })
   @ApiResponse({ status: 201, description: 'Returns created user' })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
-  @ApiOperation({ summary: 'Get all users with optional role filter and pagination (Admin only)' })
+  @ApiOperation({
+    summary:
+      'Get all users with optional role filter and pagination (Admin only)',
+  })
   @ApiQuery({ name: 'role', enum: Role, required: false })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
@@ -55,7 +66,9 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Update user details, password, or role (Admin only)' })
+  @ApiOperation({
+    summary: 'Update user details, password, or role (Admin only)',
+  })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);

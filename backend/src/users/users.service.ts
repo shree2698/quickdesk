@@ -103,7 +103,9 @@ export class UsersService {
         where: { email: dto.email.toLowerCase() },
       });
       if (existing && existing.id !== id) {
-        throw new ConflictException('Email address is already used by another user');
+        throw new ConflictException(
+          'Email address is already used by another user',
+        );
       }
     }
 
@@ -134,7 +136,9 @@ export class UsersService {
 
   async remove(id: string, currentUserId: string) {
     if (id === currentUserId) {
-      throw new BadRequestException('You cannot delete your own admin user account');
+      throw new BadRequestException(
+        'You cannot delete your own admin user account',
+      );
     }
 
     await this.findOne(id);

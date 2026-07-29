@@ -16,7 +16,9 @@ export class KnowledgeReindexProcessor extends WorkerHost {
   }
 
   async process(job: Job<KnowledgeReindexJobData>): Promise<any> {
-    this.logger.log(`Re-indexing knowledge base ID: ${job.data.knowledgeBaseId}`);
+    this.logger.log(
+      `Re-indexing knowledge base ID: ${job.data.knowledgeBaseId}`,
+    );
     return this.uploadProcessor.process(job as any);
   }
 }

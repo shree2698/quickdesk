@@ -17,11 +17,18 @@ export class VectorStoreService {
     return this.embeddings;
   }
 
-  async addDocuments(knowledgeBaseId: string, docs: Document[]): Promise<number> {
-    const validDocs = docs.filter((doc) => doc.pageContent && doc.pageContent.trim().length > 0);
+  async addDocuments(
+    knowledgeBaseId: string,
+    docs: Document[],
+  ): Promise<number> {
+    const validDocs = docs.filter(
+      (doc) => doc.pageContent && doc.pageContent.trim().length > 0,
+    );
 
     if (validDocs.length === 0) {
-      this.logger.warn(`No non-empty document content to index for KB: ${knowledgeBaseId}`);
+      this.logger.warn(
+        `No non-empty document content to index for KB: ${knowledgeBaseId}`,
+      );
       return 0;
     }
 
@@ -82,7 +89,9 @@ export class VectorStoreService {
           );
         } else {
           // Store chunk without embedding — still available for full-text fallback
-          this.logger.warn(`Chunk ${chunkIndex} stored without embedding for KB: ${knowledgeBaseId}`);
+          this.logger.warn(
+            `Chunk ${chunkIndex} stored without embedding for KB: ${knowledgeBaseId}`,
+          );
           await this.prisma.$executeRawUnsafe(
             `INSERT INTO knowledge_base_chunks (id, "knowledgeBaseId", "chunkIndex", content, metadata)
              VALUES (gen_random_uuid(), $1, $2, $3, $4::jsonb)`,
@@ -136,7 +145,9 @@ export class VectorStoreService {
         new Document({
           pageContent: r.content,
           metadata: {
-            ...(typeof r.metadata === 'string' ? JSON.parse(r.metadata) : r.metadata),
+            ...(typeof r.metadata === 'string'
+              ? JSON.parse(r.metadata)
+              : r.metadata),
             knowledgeBaseId: r.knowledgeBaseId,
             score: r.similarity,
           },

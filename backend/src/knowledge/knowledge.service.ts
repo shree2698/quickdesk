@@ -34,10 +34,11 @@ export class KnowledgeService {
     );
 
     // 3. Save converted .md file to disk
-    const { storagePath, filename: mdFilename } = await this.storageService.saveTextAsMarkdown(
-      file.originalname,
-      mdContent,
-    );
+    const { storagePath, filename: mdFilename } =
+      await this.storageService.saveTextAsMarkdown(
+        file.originalname,
+        mdContent,
+      );
 
     // Clean up temporary original upload file if it was not already an .md file
     if (path.extname(file.originalname).toLowerCase() !== '.md') {
@@ -123,7 +124,9 @@ export class KnowledgeService {
       },
     });
     if (!kb) {
-      throw new NotFoundException(`KnowledgeBase document with ID "${id}" not found`);
+      throw new NotFoundException(
+        `KnowledgeBase document with ID "${id}" not found`,
+      );
     }
     return kb;
   }

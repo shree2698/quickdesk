@@ -11,7 +11,8 @@ import { RolesGuard } from './guards/roles.guard';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       useFactory: () => ({
-        secret: process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production',
+        secret:
+          process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production',
         signOptions: {
           expiresIn: '1d',
         },

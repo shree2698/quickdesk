@@ -23,7 +23,10 @@ export class TicketsService {
   ) {}
 
   async create(employeeId: string, dto: CreateTicketDto) {
-    const aiPrediction = await this.aiService.classifyTicket(dto.title, dto.description);
+    const aiPrediction = await this.aiService.classifyTicket(
+      dto.title,
+      dto.description,
+    );
 
     const ticket = await this.prisma.ticket.create({
       data: {
@@ -145,7 +148,9 @@ export class TicketsService {
         messages: {
           orderBy: { createdAt: 'asc' },
           include: {
-            sender: { select: { id: true, name: true, email: true, role: true } },
+            sender: {
+              select: { id: true, name: true, email: true, role: true },
+            },
           },
         },
         auditLogs: {
@@ -162,7 +167,9 @@ export class TicketsService {
     }
 
     if (user.role === Role.EMPLOYEE && ticket.employeeId !== user.id) {
-      throw new ForbiddenException('You do not have permission to view this ticket');
+      throw new ForbiddenException(
+        'You do not have permission to view this ticket',
+      );
     }
 
     return ticket;
@@ -237,7 +244,9 @@ export class TicketsService {
     }
 
     if (role === Role.EMPLOYEE && ticket.employeeId !== userId) {
-      throw new ForbiddenException('You do not have permission to reply to this ticket');
+      throw new ForbiddenException(
+        'You do not have permission to reply to this ticket',
+      );
     }
 
     const updateData: any = {};
@@ -264,13 +273,20 @@ export class TicketsService {
 
     const updatedTicket = await this.prisma.ticket.update({
       where: { id },
-      data: Object.keys(updateData).length > 0 ? updateData : { updatedAt: new Date() },
+      data:
+        Object.keys(updateData).length > 0
+          ? updateData
+          : { updatedAt: new Date() },
       include: {
         employee: { select: { id: true, name: true, email: true } },
         agent: { select: { id: true, name: true, email: true } },
         messages: {
           orderBy: { createdAt: 'asc' },
-          include: { sender: { select: { id: true, name: true, email: true, role: true } } },
+          include: {
+            sender: {
+              select: { id: true, name: true, email: true, role: true },
+            },
+          },
         },
       },
     });
@@ -286,7 +302,8 @@ export class TicketsService {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
 
-    const resolutionSummary = dto.finalReply || ticket.finalReply || 'Ticket marked resolved by agent.';
+    const resolutionSummary =
+      dto.finalReply || ticket.finalReply || 'Ticket marked resolved by agent.';
 
     const updateData: any = {
       finalReply: resolutionSummary,
@@ -317,7 +334,11 @@ export class TicketsService {
         agent: { select: { id: true, name: true, email: true } },
         messages: {
           orderBy: { createdAt: 'asc' },
-          include: { sender: { select: { id: true, name: true, email: true, role: true } } },
+          include: {
+            sender: {
+              select: { id: true, name: true, email: true, role: true },
+            },
+          },
         },
       },
     });
@@ -347,7 +368,10 @@ export class TicketsService {
     const chatHistory =
       ticket.messages && ticket.messages.length > 0
         ? ticket.messages
-            .map((m) => `[${m.sender?.role || 'USER'} - ${m.sender?.name}]: ${m.text}`)
+            .map(
+              (m) =>
+                `[${m.sender?.role || 'USER'} - ${m.sender?.name}]: ${m.text}`,
+            )
             .join('\n')
         : 'No previous chat messages.';
 
@@ -358,7 +382,9 @@ export class TicketsService {
       chatHistory,
     );
 
-    const citationTitles = copilotResult.citations.map((c) => c.title).filter(Boolean);
+    const citationTitles = copilotResult.citations
+      .map((c) => c.title)
+      .filter(Boolean);
 
     await this.prisma.ticket.update({
       where: { id },

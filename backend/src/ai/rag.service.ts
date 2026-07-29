@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables';
+import {
+  RunnableSequence,
+  RunnablePassthrough,
+} from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { VectorStoreService } from '../knowledge/vector-store.service';
 import { Document } from '@langchain/core/documents';
@@ -16,7 +19,9 @@ export class RagService {
     this.model = LlmFactory.createChatModel(0.2);
   }
 
-  async answerQuestion(question: string): Promise<{ answer: string; sources: any[] }> {
+  async answerQuestion(
+    question: string,
+  ): Promise<{ answer: string; sources: any[] }> {
     this.logger.log(`Executing RAG query for question: "${question}"`);
 
     let docs: Document[] = [];
@@ -55,9 +60,13 @@ export class RagService {
     // 3. Build concise context blocks with source article titles for citations
     const context = docs
       .map((doc) => {
-        const title = doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base';
+        const title =
+          doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base';
         // Slice content to top 600 characters per chunk to conserve LLM context window tokens
-        const snippet = doc.pageContent.length > 600 ? doc.pageContent.slice(0, 600) + '...' : doc.pageContent;
+        const snippet =
+          doc.pageContent.length > 600
+            ? doc.pageContent.slice(0, 600) + '...'
+            : doc.pageContent;
         return `[Source: ${title}]\n${snippet}`;
       })
       .join('\n\n');
@@ -65,14 +74,16 @@ export class RagService {
     // Extract citations/sources metadata with title info
     const sources = docs.map((doc) => ({
       content: doc.pageContent,
-      title: doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base',
+      title:
+        doc.metadata?.sourceTitle || doc.metadata?.title || 'Knowledge Base',
       knowledgeBaseId: doc.metadata?.knowledgeBaseId || '',
       score: doc.metadata?.score,
       metadata: doc.metadata,
     }));
 
     // 4. Concise RAG prompt template to minimize token usage
-    const promptTemplate = PromptTemplate.fromTemplate(`You are QuickDesk AI. Answer using ONLY the context chunks below.
+    const promptTemplate =
+      PromptTemplate.fromTemplate(`You are QuickDesk AI. Answer using ONLY the context chunks below.
 Cite the source article name in brackets next to information you present.
 If not in context, state: "I cannot find that in our company documentation. Would you like me to open a ticket?"
 

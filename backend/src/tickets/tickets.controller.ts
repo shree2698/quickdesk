@@ -8,7 +8,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { TicketQueryDto } from './dto/ticket-query.dto';
@@ -29,15 +34,26 @@ import { Role } from '@prisma/client';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  @ApiOperation({ summary: 'Submit a new support ticket (Triggers AI auto-classification)' })
-  @ApiResponse({ status: 201, description: 'Ticket successfully created with AI predictions' })
+  @ApiOperation({
+    summary: 'Submit a new support ticket (Triggers AI auto-classification)',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Ticket successfully created with AI predictions',
+  })
   @Roles(Role.EMPLOYEE, Role.AGENT, Role.ADMIN)
   @Post()
-  async create(@GetUser('id') employeeId: string, @Body() dto: CreateTicketDto) {
+  async create(
+    @GetUser('id') employeeId: string,
+    @Body() dto: CreateTicketDto,
+  ) {
     return this.ticketsService.create(employeeId, dto);
   }
 
-  @ApiOperation({ summary: 'Get list of tickets (Employees see own only; Agents see all with filters)' })
+  @ApiOperation({
+    summary:
+      'Get list of tickets (Employees see own only; Agents see all with filters)',
+  })
   @ApiResponse({ status: 200, description: 'Returns array of tickets' })
   @Get()
   async findAll(
@@ -49,7 +65,10 @@ export class TicketsController {
 
   @ApiOperation({ summary: 'Get details for a single ticket by ID' })
   @ApiResponse({ status: 200, description: 'Returns ticket details' })
-  @ApiResponse({ status: 403, description: 'Forbidden if employee views another user ticket' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden if employee views another user ticket',
+  })
   @ApiResponse({ status: 404, description: 'Ticket not found' })
   @Get(':id')
   async findOne(
@@ -59,8 +78,14 @@ export class TicketsController {
     return this.ticketsService.findOne(id, user);
   }
 
-  @ApiOperation({ summary: 'Generate AI Copilot response draft for a ticket (Agent/Admin only)' })
-  @ApiResponse({ status: 200, description: 'Returns AI copilot response draft and KB citations' })
+  @ApiOperation({
+    summary:
+      'Generate AI Copilot response draft for a ticket (Agent/Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns AI copilot response draft and KB citations',
+  })
   @Roles(Role.AGENT, Role.ADMIN)
   @Post(':id/copilot-suggest')
   async generateCopilotDraft(@Param('id') id: string) {
@@ -68,7 +93,10 @@ export class TicketsController {
   }
 
   @ApiOperation({ summary: 'Override ticket category (Agent/Admin only)' })
-  @ApiResponse({ status: 200, description: 'Category updated and audit log created' })
+  @ApiResponse({
+    status: 200,
+    description: 'Category updated and audit log created',
+  })
   @Roles(Role.AGENT, Role.ADMIN)
   @Patch(':id/category')
   async updateCategory(
@@ -80,7 +108,10 @@ export class TicketsController {
   }
 
   @ApiOperation({ summary: 'Override ticket priority (Agent/Admin only)' })
-  @ApiResponse({ status: 200, description: 'Priority updated and audit log created' })
+  @ApiResponse({
+    status: 200,
+    description: 'Priority updated and audit log created',
+  })
   @Roles(Role.AGENT, Role.ADMIN)
   @Patch(':id/priority')
   async updatePriority(
@@ -92,7 +123,10 @@ export class TicketsController {
   }
 
   @ApiOperation({ summary: 'Send reply/message to ticket' })
-  @ApiResponse({ status: 200, description: 'Reply saved as message in ticket conversation' })
+  @ApiResponse({
+    status: 200,
+    description: 'Reply saved as message in ticket conversation',
+  })
   @Roles(Role.EMPLOYEE, Role.AGENT, Role.ADMIN)
   @Post(':id/reply')
   async sendReply(
@@ -105,7 +139,10 @@ export class TicketsController {
   }
 
   @ApiOperation({ summary: 'Resolve ticket (Agent/Admin only)' })
-  @ApiResponse({ status: 200, description: 'Final resolution saved and ticket status set to RESOLVED' })
+  @ApiResponse({
+    status: 200,
+    description: 'Final resolution saved and ticket status set to RESOLVED',
+  })
   @Roles(Role.AGENT, Role.ADMIN)
   @Post(':id/resolve')
   async resolveTicket(
@@ -116,7 +153,9 @@ export class TicketsController {
     return this.ticketsService.resolveTicket(id, agentId, dto);
   }
 
-  @ApiOperation({ summary: 'Get override audit logs for a ticket (Agent/Admin only)' })
+  @ApiOperation({
+    summary: 'Get override audit logs for a ticket (Agent/Admin only)',
+  })
   @ApiResponse({ status: 200, description: 'Returns audit log history' })
   @Roles(Role.AGENT, Role.ADMIN)
   @Get(':id/audit-log')

@@ -12,7 +12,11 @@ export class DocumentConverterService {
   /**
    * Converts uploaded files (PDF, DOCX, CSV, TXT) to Markdown (.md) string content
    */
-  async convertToMarkdown(filePath: string, mimeType: string, filename: string): Promise<string> {
+  async convertToMarkdown(
+    filePath: string,
+    mimeType: string,
+    filename: string,
+  ): Promise<string> {
     const ext = path.extname(filename).toLowerCase();
     this.logger.log(`Converting ${filename} (${ext}) to Markdown...`);
 
@@ -30,7 +34,10 @@ export class DocumentConverterService {
       return `# ${title}\n\n${pagesMd}`;
     }
 
-    if (ext === '.docx' || mimeType.includes('officedocument.wordprocessingml')) {
+    if (
+      ext === '.docx' ||
+      mimeType.includes('officedocument.wordprocessingml')
+    ) {
       const loader = new DocxLoader(filePath);
       const docs = await loader.load();
       const title = path.basename(filename, ext);

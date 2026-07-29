@@ -4,17 +4,26 @@ import { Type } from 'class-transformer';
 import { TicketStatus, TicketCategory, TicketPriority } from '@prisma/client';
 
 export class TicketQueryDto {
-  @ApiPropertyOptional({ enum: TicketStatus, description: 'Filter by ticket status' })
+  @ApiPropertyOptional({
+    enum: TicketStatus,
+    description: 'Filter by ticket status',
+  })
   @IsOptional()
   @IsEnum(TicketStatus)
   status?: TicketStatus;
 
-  @ApiPropertyOptional({ enum: TicketCategory, description: 'Filter by ticket category' })
+  @ApiPropertyOptional({
+    enum: TicketCategory,
+    description: 'Filter by ticket category',
+  })
   @IsOptional()
   @IsEnum(TicketCategory)
   category?: TicketCategory;
 
-  @ApiPropertyOptional({ enum: TicketPriority, description: 'Filter by ticket priority' })
+  @ApiPropertyOptional({
+    enum: TicketPriority,
+    description: 'Filter by ticket priority',
+  })
   @IsOptional()
   @IsEnum(TicketPriority)
   priority?: TicketPriority;
@@ -24,7 +33,10 @@ export class TicketQueryDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Page number for pagination', default: 1 })
+  @ApiPropertyOptional({
+    description: 'Page number for pagination',
+    default: 1,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -38,4 +50,3 @@ export class TicketQueryDto {
   @Min(1)
   limit?: number;
 }
-

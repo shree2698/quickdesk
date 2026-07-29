@@ -21,7 +21,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Set global API prefix
   app.setGlobalPrefix('api');
 
@@ -34,7 +34,9 @@ async function bootstrap() {
   // Swagger Documentation Setup
   const config = new DocumentBuilder()
     .setTitle('QuickDesk API')
-    .setDescription('AI-Assisted Helpdesk API documentation including Auth, Tickets, RAG, and Realtime endpoints.')
+    .setDescription(
+      'AI-Assisted Helpdesk API documentation including Auth, Tickets, RAG, and Realtime endpoints.',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -55,6 +57,8 @@ async function bootstrap() {
   const port = process.env.PORT ?? 5000;
   await app.listen(port);
   console.log(`Backend server running on port ${port}`);
-  console.log(`Swagger documentation available at http://localhost:${port}/api/docs`);
+  console.log(
+    `Swagger documentation available at http://localhost:${port}/api/docs`,
+  );
 }
 bootstrap();

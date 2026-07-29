@@ -50,16 +50,21 @@ export class MetricsService {
     let medianResolutionTimeMinutes = 0;
     if (resolvedTickets.length > 0) {
       const resolutionTimes = resolvedTickets
-        .map((t) => (t.resolvedAt!.getTime() - t.createdAt.getTime()) / (1000 * 60))
+        .map(
+          (t) =>
+            (t.resolvedAt!.getTime() - t.createdAt.getTime()) / (1000 * 60),
+        )
         .sort((a, b) => a - b);
 
       const mid = Math.floor(resolutionTimes.length / 2);
       if (resolutionTimes.length % 2 === 0) {
-        medianResolutionTimeMinutes = (resolutionTimes[mid - 1] + resolutionTimes[mid]) / 2;
+        medianResolutionTimeMinutes =
+          (resolutionTimes[mid - 1] + resolutionTimes[mid]) / 2;
       } else {
         medianResolutionTimeMinutes = resolutionTimes[mid];
       }
-      medianResolutionTimeMinutes = Math.round(medianResolutionTimeMinutes * 10) / 10;
+      medianResolutionTimeMinutes =
+        Math.round(medianResolutionTimeMinutes * 10) / 10;
     }
 
     // AI Category Override Rate (%)
@@ -73,7 +78,8 @@ export class MetricsService {
 
     let aiOverridePercentage = 0;
     if (totalTicketsWithAI > 0) {
-      aiOverridePercentage = Math.round((categoryOverrideCount / totalTicketsWithAI) * 1000) / 10;
+      aiOverridePercentage =
+        Math.round((categoryOverrideCount / totalTicketsWithAI) * 1000) / 10;
     }
 
     return {

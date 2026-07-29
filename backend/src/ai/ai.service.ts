@@ -41,7 +41,9 @@ Respond ONLY in valid JSON format:
   "priority": "LOW | MEDIUM | HIGH | URGENT"
 }}`);
 
-    const chain = promptTemplate.pipe(this.model).pipe(new StringOutputParser());
+    const chain = promptTemplate
+      .pipe(this.model)
+      .pipe(new StringOutputParser());
 
     try {
       const output = await chain.invoke({ title, description });
@@ -64,7 +66,9 @@ Respond ONLY in valid JSON format:
         return { category, priority };
       }
     } catch (err: any) {
-      this.logger.warn(`AI classification failed, falling back to defaults: ${err.message}`);
+      this.logger.warn(
+        `AI classification failed, falling back to defaults: ${err.message}`,
+      );
     }
 
     return { category: TicketCategory.GENERAL, priority: TicketPriority.LOW };
@@ -92,7 +96,8 @@ Respond ONLY in valid JSON format:
       .map((c) => `[Source: ${c.title}]\n${c.content.slice(0, 450)}`)
       .join('\n\n');
 
-    const promptTemplate = PromptTemplate.fromTemplate(`You are QuickDesk Agent Copilot.
+    const promptTemplate =
+      PromptTemplate.fromTemplate(`You are QuickDesk Agent Copilot.
 Draft a concise, friendly chat reply to employee "{employeeName}".
 
 Rules:
@@ -107,7 +112,9 @@ Internal Guides: {contextText}
 
 Reply Draft:`);
 
-    const chain = promptTemplate.pipe(this.model).pipe(new StringOutputParser());
+    const chain = promptTemplate
+      .pipe(this.model)
+      .pipe(new StringOutputParser());
 
     let suggestion = '';
     try {

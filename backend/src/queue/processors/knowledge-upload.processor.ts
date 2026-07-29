@@ -27,14 +27,18 @@ export class KnowledgeUploadProcessor extends WorkerHost {
 
   async process(job: Job<KnowledgeUploadJobData>): Promise<any> {
     const { knowledgeBaseId } = job.data;
-    this.logger.log(`Processing knowledge-upload job for ID: ${knowledgeBaseId}`);
+    this.logger.log(
+      `Processing knowledge-upload job for ID: ${knowledgeBaseId}`,
+    );
 
     const kb = await this.prisma.knowledgeBase.findUnique({
       where: { id: knowledgeBaseId },
     });
 
     if (!kb) {
-      this.logger.error(`KnowledgeBase record not found for ID: ${knowledgeBaseId}`);
+      this.logger.error(
+        `KnowledgeBase record not found for ID: ${knowledgeBaseId}`,
+      );
       return;
     }
 
@@ -45,7 +49,9 @@ export class KnowledgeUploadProcessor extends WorkerHost {
 
     try {
       // 1. Load document & split into LangChain documents using absolute disk path
-      const absoluteDiskPath = this.storageService.getAbsolutePath(kb.storagePath);
+      const absoluteDiskPath = this.storageService.getAbsolutePath(
+        kb.storagePath,
+      );
       const docs = await this.documentLoaderService.loadAndSplit(
         absoluteDiskPath,
         kb.mimeType,
@@ -81,9 +87,14 @@ export class KnowledgeUploadProcessor extends WorkerHost {
         },
       });
 
-      this.logger.log(`Successfully indexed ${count} chunks for KB: ${knowledgeBaseId}`);
+      this.logger.log(
+        `Successfully indexed ${count} chunks for KB: ${knowledgeBaseId}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to process KB upload for ID: ${knowledgeBaseId}`, error.stack);
+      this.logger.error(
+        `Failed to process KB upload for ID: ${knowledgeBaseId}`,
+        error.stack,
+      );
       await this.prisma.knowledgeBase.update({
         where: { id: knowledgeBaseId },
         data: {

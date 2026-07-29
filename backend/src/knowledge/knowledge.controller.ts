@@ -12,7 +12,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { KnowledgeService } from './knowledge.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -44,9 +49,14 @@ export class KnowledgeController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all Knowledge Base documents with pagination' })
+  @ApiOperation({
+    summary: 'List all Knowledge Base documents with pagination',
+  })
   async findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.knowledgeService.findAll(page ? Number(page) : undefined, limit ? Number(limit) : undefined);
+    return this.knowledgeService.findAll(
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    );
   }
 
   @Get(':id')

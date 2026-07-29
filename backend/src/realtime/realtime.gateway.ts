@@ -19,7 +19,9 @@ import { Role } from '@prisma/client';
     credentials: true,
   },
 })
-export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RealtimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -29,19 +31,29 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   async handleConnection(client: Socket) {
     try {
-      const authHeader = client.handshake.auth?.token || client.handshake.headers?.authorization;
+      const authHeader =
+        client.handshake.auth?.token || client.handshake.headers?.authorization;
       if (!authHeader) {
-        this.logger.warn(`Unauthorized socket connection attempt: ${client.id}`);
+        this.logger.warn(
+          `Unauthorized socket connection attempt: ${client.id}`,
+        );
         client.disconnect();
         return;
       }
 
       const token = authHeader.replace('Bearer ', '');
-      const secret = process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production';
-      const decoded = jwt.verify(token, secret) as { sub: string; email: string; role: Role };
+      const secret =
+        process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production';
+      const decoded = jwt.verify(token, secret) as {
+        sub: string;
+        email: string;
+        role: Role;
+      };
 
       client.data.user = decoded;
-      this.logger.log(`Client connected: ${client.id} (User: ${decoded.email}, Role: ${decoded.role})`);
+      this.logger.log(
+        `Client connected: ${client.id} (User: ${decoded.email}, Role: ${decoded.role})`,
+      );
 
       // Join a personal room for the user to receive targeted updates
       client.join(`user-${decoded.sub}`);

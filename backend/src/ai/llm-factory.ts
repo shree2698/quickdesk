@@ -1,6 +1,9 @@
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { Embeddings } from '@langchain/core/embeddings';
-import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import {
+  ChatGoogleGenerativeAI,
+  GoogleGenerativeAIEmbeddings,
+} from '@langchain/google-genai';
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { Logger } from '@nestjs/common';
 
@@ -20,7 +23,11 @@ export class LlmFactory {
     switch (provider) {
       case 'grok':
       case 'xai': {
-        const apiKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY || process.env.OPENAI_API_KEY || '';
+        const apiKey =
+          process.env.GROK_API_KEY ||
+          process.env.XAI_API_KEY ||
+          process.env.OPENAI_API_KEY ||
+          '';
         const modelName = process.env.AI_MODEL || 'grok-2-latest';
         this.logger.log(`Using Grok (xAI): model=${modelName}`);
         return new ChatOpenAI({
@@ -34,7 +41,8 @@ export class LlmFactory {
       }
 
       case 'openrouter': {
-        const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || '';
+        const apiKey =
+          process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || '';
         const modelName = process.env.AI_MODEL || 'google/gemini-2.0-flash-001';
         this.logger.log(`Using OpenRouter: model=${modelName}`);
         return new ChatOpenAI({
@@ -42,7 +50,8 @@ export class LlmFactory {
           modelName,
           temperature,
           configuration: {
-            baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+            baseURL:
+              process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
           },
         });
       }
@@ -61,7 +70,8 @@ export class LlmFactory {
       case 'google':
       case 'gemini':
       default: {
-        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+        const apiKey =
+          process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
         const modelName = process.env.AI_MODEL || 'gemini-2.0-flash';
         this.logger.log(`Using Google Gemini: model=${modelName}`);
         return new ChatGoogleGenerativeAI({
@@ -86,8 +96,13 @@ export class LlmFactory {
     switch (provider) {
       case 'grok':
       case 'xai': {
-        const apiKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY || process.env.OPENAI_API_KEY || '';
-        const modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+        const apiKey =
+          process.env.GROK_API_KEY ||
+          process.env.XAI_API_KEY ||
+          process.env.OPENAI_API_KEY ||
+          '';
+        const modelName =
+          process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
         return new OpenAIEmbeddings({
           apiKey,
           modelName,
@@ -98,20 +113,24 @@ export class LlmFactory {
       }
 
       case 'openrouter': {
-        const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || '';
-        const modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+        const apiKey =
+          process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || '';
+        const modelName =
+          process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
         return new OpenAIEmbeddings({
           apiKey,
           modelName,
           configuration: {
-            baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+            baseURL:
+              process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
           },
         });
       }
 
       case 'openai': {
         const apiKey = process.env.OPENAI_API_KEY || '';
-        const modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+        const modelName =
+          process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
         return new OpenAIEmbeddings({
           apiKey,
           modelName,
@@ -121,7 +140,8 @@ export class LlmFactory {
       case 'google':
       case 'gemini':
       default: {
-        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+        const apiKey =
+          process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
         const modelName = process.env.EMBEDDING_MODEL || 'gemini-embedding-001';
         return new GoogleGenerativeAIEmbeddings({
           apiKey,

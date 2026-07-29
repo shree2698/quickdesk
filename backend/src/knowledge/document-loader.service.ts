@@ -11,8 +11,14 @@ import * as fs from 'fs/promises';
 export class DocumentLoaderService {
   private readonly logger = new Logger(DocumentLoaderService.name);
 
-  async loadAndSplit(filePath: string, mimeType: string, filename: string): Promise<Document[]> {
-    this.logger.log(`Loading document from ${filePath} with mimeType: ${mimeType}`);
+  async loadAndSplit(
+    filePath: string,
+    mimeType: string,
+    filename: string,
+  ): Promise<Document[]> {
+    this.logger.log(
+      `Loading document from ${filePath} with mimeType: ${mimeType}`,
+    );
     const ext = path.extname(filename).toLowerCase();
 
     let mdContent = '';
@@ -21,7 +27,10 @@ export class DocumentLoaderService {
       const loader = new PDFLoader(filePath);
       const docs = await loader.load();
       mdContent = docs.map((d) => d.pageContent).join('\n\n');
-    } else if (ext === '.docx' || mimeType.includes('officedocument.wordprocessingml')) {
+    } else if (
+      ext === '.docx' ||
+      mimeType.includes('officedocument.wordprocessingml')
+    ) {
       const loader = new DocxLoader(filePath);
       const docs = await loader.load();
       mdContent = docs.map((d) => d.pageContent).join('\n\n');
