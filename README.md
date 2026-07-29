@@ -190,6 +190,15 @@ We explicitly chose **Socket.io** over native WebSockets or Server-Sent Events (
 
 ---
 
+## ✨ Recent Code Quality Improvements
+
+Recent updates have significantly enhanced the stability and type safety of the codebase:
+- **Backend Type Safety**: Resolved strict literal union mismatches in `ai.service.ts` and refactored Prisma update payloads in `tickets.service.ts` to correctly utilize the `connect` relation syntax.
+- **Frontend Hook Optimization**: Refactored `AuthContext` and `SocketContext` to strictly adhere to React data-fetching rules, eliminating cascading renders and infinite loops.
+- **TypeScript Strictness**: Systematically replaced widespread instances of `any` with strict TS interfaces (`UserPayload`, `TicketItem`, `ChatMessage`) and strictly typed `catch` error blocks across the board.
+
+---
+
 ## 📡 API Reference & OpenAPI Docs
 
 QuickDesk features interactive Swagger documentation at **`http://localhost:5000/api/docs`**.
