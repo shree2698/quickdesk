@@ -26,14 +26,14 @@ export default function AiAssistantPage() {
     e.preventDefault();
     if (!query.trim() || loading) return;
 
-    const userMessage = { role: 'user', text: query };
+    const userMessage: ChatMessage = { role: 'user', text: query };
     setMessages((prev) => [...prev, userMessage]);
     setQuery('');
     setLoading(true);
 
     try {
       const res = await api.post('/ai/chat', { message: userMessage.text });
-      const aiMessage = {
+      const aiMessage: ChatMessage = {
         role: 'assistant',
         text: res.data.answer,
         citations: res.data.citations,
@@ -52,7 +52,7 @@ export default function AiAssistantPage() {
         {
           role: 'assistant',
           text: displayError,
-        },
+        } as ChatMessage,
       ]);
     } finally {
       setLoading(false);

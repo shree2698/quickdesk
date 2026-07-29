@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { api } from '@/lib/api';
 import {
   Sparkles,
@@ -51,7 +51,7 @@ export default function MyTicketsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  const fetchTickets = React.useCallback(async (page: number) => {
+  const fetchTickets = useCallback(async (page: number) => {
     setLoading(true);
     try {
       const res = await api.get('/tickets', {
