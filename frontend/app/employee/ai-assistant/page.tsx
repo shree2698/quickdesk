@@ -6,9 +6,20 @@ import { Bot, Send, FileText, PlusCircle,MessageCircleQuestionMark } from 'lucid
 import Link from 'next/link';
 import { MarkdownViewer } from '@/components/ui/MarkdownViewer';
 
+interface Citation {
+  title: string;
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  text: string;
+  citations?: Citation[];
+  canCreateTicket?: boolean;
+}
+
 export default function AiAssistantPage() {
   const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSend = async (e: React.FormEvent) => {
@@ -29,7 +40,8 @@ export default function AiAssistantPage() {
         canCreateTicket: res.data.canCreateTicket,
       };
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const serverMsg = err.response?.data?.message || err.message || '';
       let displayError = 'Sorry, I ran into an error connecting to AI services. Please try again.';
       if (serverMsg) {
@@ -65,7 +77,7 @@ export default function AiAssistantPage() {
             <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 space-y-3">
               <MessageCircleQuestionMark className="w-10 h-10 text-blue-600 opacity-60" />
               <p className="text-sm max-w-sm">
-                Ask questions like "How do I setup VPN?", "What is the password reset policy?", or "How do I claim expenses?"
+                Ask questions like &quot;How do I setup VPN?&quot;, &quot;What is the password reset policy?&quot;, or &quot;How do I claim expenses?&quot;
               </p>
             </div>
           ) : (
@@ -89,7 +101,7 @@ export default function AiAssistantPage() {
                         Source Citations:
                       </span>
                       <div className="flex flex-wrap gap-2">
-                        {msg.citations.map((c: any, cIdx: number) => (
+                        {msg.citations.map((c: Citation, cIdx: number) => (
                           <span
                             key={cIdx}
                             className="px-2 py-1 rounded bg-blue-50 border border-blue-200 text-[11px] text-blue-700 flex items-center gap-1 font-medium"
