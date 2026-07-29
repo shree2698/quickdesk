@@ -38,8 +38,9 @@ export class StorageService {
       await fs.writeFile(storagePath, file.buffer);
       return { storagePath, filename };
     } catch (error) {
+      const err = error as Error;
       throw new InternalServerErrorException(
-        `Failed to save original file: ${error.message}`,
+        `Failed to save original file: ${err.message}`,
       );
     }
   }
@@ -61,8 +62,9 @@ export class StorageService {
       await fs.writeFile(storagePath, markdownContent, 'utf-8');
       return { storagePath, filename };
     } catch (error) {
+      const err = error as Error;
       throw new InternalServerErrorException(
-        `Failed to save Markdown file: ${error.message}`,
+        `Failed to save Markdown file: ${err.message}`,
       );
     }
   }

@@ -21,7 +21,7 @@ export class RagService {
 
   async answerQuestion(
     question: string,
-  ): Promise<{ answer: string; sources: any[] }> {
+  ): Promise<{ answer: string; sources: Array<{ content: string; title: string; knowledgeBaseId: string; score?: number; metadata: Record<string, unknown> }> }> {
     this.logger.log(`Executing RAG query for question: "${question}"`);
 
     let docs: Document[] = [];

@@ -50,7 +50,10 @@ Respond ONLY in valid JSON format:
       const text = output?.trim() || '';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = JSON.parse(jsonMatch[0]) as {
+          category?: string;
+          priority?: string;
+        };
 
         const validCategories = Object.values(TicketCategory);
         const validPriorities = Object.values(TicketPriority);
@@ -142,7 +145,7 @@ Reply Draft:`);
       }
     }
 
-    const citations = relevantChunks.sources.map((c) => ({
+    const citations = relevantChunks.sources.map((c: { knowledgeBaseId?: string; title?: string; content: string }) => ({
       articleId: c.knowledgeBaseId || '',
       title: c.title || 'Knowledge Base',
       snippet: c.content.substring(0, 100) + '...',

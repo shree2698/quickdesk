@@ -52,7 +52,10 @@ export class KnowledgeController {
   @ApiOperation({
     summary: 'List all Knowledge Base documents with pagination',
   })
-  async findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
+  async findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ): Promise<{ data: import('@prisma/client').KnowledgeBase[]; total: number; page: number; limit: number; totalPages: number }> {
     return this.knowledgeService.findAll(
       page ? Number(page) : undefined,
       limit ? Number(limit) : undefined,

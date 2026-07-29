@@ -4,7 +4,6 @@ import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { DocumentConverterService } from './document-converter.service';
-import { KnowledgeBaseStatus, KnowledgeBase } from '@prisma/client';
 import * as path from 'path';
 
 @Injectable()
@@ -70,7 +69,10 @@ export class KnowledgeService {
     return kb;
   }
 
-  async findAll(page?: number, limit?: number): Promise<any> {
+  async findAll(
+    page?: number,
+    limit?: number,
+  ): Promise<{ data: KnowledgeBase[]; total: number; page: number; limit: number; totalPages: number }> {
     if (page && limit) {
       const skip = (page - 1) * limit;
       const [data, total] = await Promise.all([

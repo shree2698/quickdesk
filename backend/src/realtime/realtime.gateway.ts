@@ -41,7 +41,7 @@ export class RealtimeGateway
 
   constructor(private prisma: PrismaService) {}
 
-  async handleConnection(client: AuthenticatedSocket) {
+  handleConnection(client: AuthenticatedSocket) {
     try {
       const authHeader =
         client.handshake.auth?.token || client.handshake.headers?.authorization;
@@ -68,15 +68,18 @@ export class RealtimeGateway
       );
 
       // Join a personal room for the user to receive targeted updates
-      client.join(`user-${decoded.sub}`);
+      void client.join(`user-${decoded.sub}`);
 
       // If user is Agent or Admin, join channel-agents room for queue broadcasts
       if (decoded.role === Role.AGENT || decoded.role === Role.ADMIN) {
-        client.join('channel-agents');
+        void client.join('channel-agents');
         this.logger.log(`Client ${client.id} joined 'channel-agents' room`);
       }
     } catch (err) {
-      this.logger.error(`Socket auth failed for ${client.id}: ${err.message}`);
+      const error = err as Error;
+      this.logger.error(
+        `Socket auth failed for ${client.id}: ${error.message}`,
+      );
       client.disconnect();
     }
   }
@@ -106,7 +109,7 @@ export class RealtimeGateway
     }
 
     const roomName = `ticket-${data.ticketId}`;
-    client.join(roomName);
+    void client.join(roomName);
     this.logger.log(`Client ${client.id} joined room ${roomName}`);
     client.emit('joined_room', { room: roomName });
   }
@@ -118,7 +121,7 @@ export class RealtimeGateway
   ) {
     if (!data.ticketId) return;
     const roomName = `ticket-${data.ticketId}`;
-    client.leave(roomName);
+    void client.leave(roomName);
     this.logger.log(`Client ${client.id} left room ${roomName}`);
   }
 
@@ -178,14 +181,18 @@ export class RealtimeGateway
   /**
    * Helper method to broadcast ticket_created to all agents
    */
-  notifyTicketCreated(ticket: Prisma.TicketGetPayload<any>) {
+  notifyTicketCreated(
+    ticket: Prisma.TicketGetPayload<Prisma.TicketDefaultArgs>,
+  ) {
     this.server.to('channel-agents').emit('ticket:new', ticket);
   }
 
   /**
    * Helper method to broadcast ticket_resolved to ticket room and agent channel
    */
-  notifyTicketResolved(ticket: Prisma.TicketGetPayload<any>) {
+  notifyTicketResolved(
+    ticket: Prisma.TicketGetPayload<Prisma.TicketDefaultArgs>,
+  ) {
     this.server.to(`ticket-${ticket.id}`).emit('ticket:resolved', ticket);
     this.server.to(`user-${ticket.employeeId}`).emit('ticket:resolved', ticket);
     this.server.to('channel-agents').emit('ticket_updated', {
@@ -198,7 +205,9 @@ export class RealtimeGateway
   /**
    * Helper method to broadcast ticket_updated to ticket room and agent channel
    */
-  notifyTicketUpdated(ticket: Prisma.TicketGetPayload<any>) {
+  notifyTicketUpdated(
+    ticket: Prisma.TicketGetPayload<Prisma.TicketDefaultArgs>,
+  ) {
     this.server.to(`ticket-${ticket.id}`).emit('ticket:updated', ticket);
     this.server.to('channel-agents').emit('ticket_updated', {
       ticketId: ticket.id,

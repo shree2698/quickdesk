@@ -25,7 +25,7 @@ export class KnowledgeUploadProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<KnowledgeUploadJobData>): Promise<any> {
+  async process(job: Job<KnowledgeUploadJobData>): Promise<void> {
     const { knowledgeBaseId } = job.data;
     this.logger.log(
       `Processing knowledge-upload job for ID: ${knowledgeBaseId}`,
@@ -90,7 +90,8 @@ export class KnowledgeUploadProcessor extends WorkerHost {
       this.logger.log(
         `Successfully indexed ${count} chunks for KB: ${knowledgeBaseId}`,
       );
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       this.logger.error(
         `Failed to process KB upload for ID: ${knowledgeBaseId}`,
         error.stack,

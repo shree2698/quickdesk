@@ -76,7 +76,7 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Delete user account (Admin only)' })
   @Delete(':id')
-  remove(@Param('id') id: string, @Req() req: any) {
+  remove(@Param('id') id: string, @Req() req: { user: { id: string } }) {
     return this.usersService.remove(id, req.user.id);
   }
 }
