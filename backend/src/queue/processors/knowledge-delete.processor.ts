@@ -42,8 +42,9 @@ export class KnowledgeDeleteProcessor extends WorkerHost {
 
       this.logger.log(`Successfully deleted KB: ${knowledgeBaseId}`);
     } catch (error) {
-      this.logger.error(`Failed to delete KB: ${knowledgeBaseId}`, error.stack);
-      throw error;
+      const err = error as Error;
+      this.logger.error(`Failed to delete KB: ${knowledgeBaseId}`, err.stack);
+      throw err;
     }
   }
 }

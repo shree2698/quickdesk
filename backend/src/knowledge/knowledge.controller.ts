@@ -55,7 +55,13 @@ export class KnowledgeController {
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-  ): Promise<{ data: import('@prisma/client').KnowledgeBase[]; total: number; page: number; limit: number; totalPages: number }> {
+  ): Promise<{
+    data: import('@prisma/client').KnowledgeBase[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     return this.knowledgeService.findAll(
       page ? Number(page) : undefined,
       limit ? Number(limit) : undefined,

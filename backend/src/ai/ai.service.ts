@@ -145,11 +145,13 @@ Reply Draft:`);
       }
     }
 
-    const citations = relevantChunks.sources.map((c: { knowledgeBaseId?: string; title?: string; content: string }) => ({
-      articleId: c.knowledgeBaseId || '',
-      title: c.title || 'Knowledge Base',
-      snippet: c.content.substring(0, 100) + '...',
-    }));
+    const citations = relevantChunks.sources.map(
+      (c: { knowledgeBaseId?: string; title?: string; content: string }) => ({
+        articleId: c.knowledgeBaseId || '',
+        title: c.title || 'Knowledge Base',
+        snippet: c.content.substring(0, 100) + '...',
+      }),
+    );
 
     return {
       suggestion,

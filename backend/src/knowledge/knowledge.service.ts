@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { DocumentConverterService } from './document-converter.service';
+import { KnowledgeBaseStatus, KnowledgeBase } from '@prisma/client';
 import * as path from 'path';
 
 @Injectable()
@@ -33,7 +34,7 @@ export class KnowledgeService {
     );
 
     // 3. Save converted .md file to disk
-    const { storagePath, filename: mdFilename } =
+    const { filename: mdFilename } =
       await this.storageService.saveTextAsMarkdown(
         file.originalname,
         mdContent,
@@ -72,7 +73,13 @@ export class KnowledgeService {
   async findAll(
     page?: number,
     limit?: number,
-  ): Promise<{ data: KnowledgeBase[]; total: number; page: number; limit: number; totalPages: number }> {
+  ): Promise<{
+    data: KnowledgeBase[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     if (page && limit) {
       const skip = (page - 1) * limit;
       const [data, total] = await Promise.all([

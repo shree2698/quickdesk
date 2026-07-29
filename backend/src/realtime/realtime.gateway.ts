@@ -44,7 +44,8 @@ export class RealtimeGateway
   handleConnection(client: AuthenticatedSocket) {
     try {
       const authHeader =
-        client.handshake.auth?.token || client.handshake.headers?.authorization;
+        (client.handshake.auth?.token as string | undefined) ||
+        client.handshake.headers?.authorization;
       if (!authHeader) {
         this.logger.warn(
           `Unauthorized socket connection attempt: ${client.id}`,

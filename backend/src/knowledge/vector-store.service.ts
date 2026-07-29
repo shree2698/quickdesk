@@ -131,7 +131,7 @@ export class VectorStoreService {
       id: string;
       knowledgeBaseId: string;
       content: string;
-      metadata: any;
+      metadata: Record<string, unknown> | string;
       similarity: number;
     }> = await this.prisma.$queryRawUnsafe(
       `SELECT id, "knowledgeBaseId", content, metadata, 1 - (embedding <=> $1::vector) as similarity
