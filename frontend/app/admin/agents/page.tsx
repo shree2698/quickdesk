@@ -79,7 +79,8 @@ export default function AdminAgentsPage() {
     try {
       if (editingUser) {
         // Update user
-        const payload: any = { name, email, role };
+        interface UserPayload { name: string; email: string; role: string; password?: string; }
+        const payload: UserPayload = { name, email, role };
         if (password.trim()) {
           payload.password = password;
         }
@@ -94,7 +95,8 @@ export default function AdminAgentsPage() {
       setIsModalOpen(false);
       fetchUsers(currentPage, roleFilter);
       setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       setFormError(err.response?.data?.message || err.message || 'Operation failed');
     } finally {
       setSubmitting(false);
@@ -109,8 +111,9 @@ export default function AdminAgentsPage() {
       setSuccessMsg(`User ${user.name} deleted`);
       fetchUsers(currentPage, roleFilter);
       setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete user');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      alert(err.response?.data?.message || err.message || 'Failed to delete user');
     }
   };
 
@@ -320,7 +323,7 @@ export default function AdminAgentsPage() {
                 </label>
                 <select
                   value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
+                  onChange={(e) => setRole(e.target.value as 'EMPLOYEE' | 'AGENT' | 'ADMIN')}
                   className="w-full px-4 py-2.5 bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-600 text-sm shadow-2xs"
                 >
                   <option value="AGENT">Support Agent (Can resolve tickets)</option>

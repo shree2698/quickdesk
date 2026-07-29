@@ -22,8 +22,9 @@ export default function RegisterPage() {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       login(res.data.accessToken, res.data.user);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Try again.');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setError(err.response?.data?.message || err.message || 'Registration failed. Try again.');
     } finally {
       setLoading(false);
     }

@@ -15,8 +15,21 @@ import {
 } from 'lucide-react';
 import { Pagination } from '@/components/ui/Pagination';
 
+interface TicketItem {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  category: string;
+  priority: string;
+  createdAt: string;
+  employee?: { name: string; email: string };
+  user?: { name: string; email: string };
+  agent?: { name: string };
+}
+
 export default function AgentDashboardPage() {
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [totalTickets, setTotalTickets] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,7 +44,7 @@ export default function AgentDashboardPage() {
   const fetchTickets = async (page = currentPage) => {
     setLoading(true);
     try {
-      const params: any = { page, limit: pageSize };
+      const params: Record<string, string | number> = { page, limit: pageSize };
       if (statusFilter) params.status = statusFilter;
       if (categoryFilter) params.category = categoryFilter;
       if (priorityFilter) params.priority = priorityFilter;
@@ -45,8 +58,9 @@ export default function AgentDashboardPage() {
         setTickets(res.data);
         setTotalTickets(res.data.length);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch ticket queue');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setError(err.response?.data?.message || err.message || 'Failed to fetch ticket queue');
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { api } from '../lib/api';
 
 export type Role = 'EMPLOYEE' | 'AGENT' | 'ADMIN';
@@ -25,20 +25,32 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('quickdesk_user');
+      return storedUser ? JSON.parse(storedUser) : null;
+    }
+    return null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('quickdesk_token');
+    }
+    return null;
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-  const pathname = usePathname();
+
+  const logout = React.useCallback(() => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('quickdesk_token');
+    localStorage.removeItem('quickdesk_user');
+    router.push('/login');
+  }, [router]);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('quickdesk_token');
-    const storedUser = localStorage.getItem('quickdesk_user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-
+    if (token && user) {
       // Validate token with backend /auth/me
       api.get('/auth/me')
         .then((res) => {
@@ -52,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [token, user, logout]);
 
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
@@ -65,14 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       router.push('/employee/my-tickets');
     }
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('quickdesk_token');
-    localStorage.removeItem('quickdesk_user');
-    router.push('/login');
   };
 
   return (

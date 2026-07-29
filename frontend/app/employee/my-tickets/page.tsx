@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { useSocket } from '@/lib/SocketContext';
 import {
   Sparkles,
   Ticket,
@@ -20,20 +19,39 @@ import Link from 'next/link';
 import { MarkdownViewer } from '@/components/ui/MarkdownViewer';
 import { Pagination } from '@/components/ui/Pagination';
 
+interface MessageItem {
+  id: string;
+  text: string;
+  createdAt: string;
+  sender?: { name: string; role: string };
+}
+
+interface TicketItem {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  category: string;
+  priority: string;
+  createdAt: string;
+  finalReply?: string;
+  ragCitations?: string[];
+  messages?: MessageItem[];
+}
+
 export default function MyTicketsPage() {
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [totalTickets, setTotalTickets] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
-  const [detailedTickets, setDetailedTickets] = useState<Record<string, any>>({});
+  const [detailedTickets, setDetailedTickets] = useState<Record<string, TicketItem>>({});
   const [replyInput, setReplyInput] = useState<Record<string, string>>({});
   const [replyLoading, setReplyLoading] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-  const { socket } = useSocket();
 
-  const fetchTickets = async (page = currentPage) => {
+  const fetchTickets = React.useCallback(async (page: number) => {
     setLoading(true);
     try {
       const res = await api.get('/tickets', {
@@ -46,18 +64,19 @@ export default function MyTicketsPage() {
         setTickets(res.data);
         setTotalTickets(res.data.length);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load tickets');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setError(err.response?.data?.message || err.message || 'Failed to load tickets');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const fetchTicketDetails = async (ticketId: string) => {
     try {
       const res = await api.get(`/tickets/${ticketId}`);
       setDetailedTickets((prev) => ({ ...prev, [ticketId]: res.data }));
-    } catch (err) {
+    } catch (_err) {
       // Non-critical
     }
   };
@@ -84,8 +103,9 @@ export default function MyTicketsPage() {
       });
       setDetailedTickets((prev) => ({ ...prev, [ticketId]: res.data }));
       setReplyInput((prev) => ({ ...prev, [ticketId]: '' }));
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send reply message');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setError(err.response?.data?.message || err.message || 'Failed to send reply message');
     } finally {
       setReplyLoading((prev) => ({ ...prev, [ticketId]: false }));
     }
@@ -93,7 +113,7 @@ export default function MyTicketsPage() {
 
   useEffect(() => {
     fetchTickets(currentPage);
-  }, [currentPage]);
+  }, [currentPage, fetchTickets]);
 
   const totalPages = Math.ceil(totalTickets / pageSize);
 
@@ -134,7 +154,7 @@ export default function MyTicketsPage() {
           <Ticket className="w-12 h-12 text-slate-400 mx-auto" />
           <h3 className="text-lg font-semibold text-slate-900">No Tickets Raised Yet</h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
-            You haven't submitted any support requests yet. Click below to submit a ticket.
+            You haven&apos;t submitted any support requests yet. Click below to submit a ticket.
           </p>
           <Link
             href="/employee/submit-ticket"
@@ -246,7 +266,7 @@ export default function MyTicketsPage() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {messagesList.map((msg: any) => (
+                          {messagesList.map((msg: MessageItem) => (
                             <div
                               key={msg.id}
                               className={`p-4 rounded-xl border text-sm space-y-1.5 shadow-2xs ${

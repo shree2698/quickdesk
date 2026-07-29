@@ -11,7 +11,14 @@ export default function SubmitTicketPage() {
   const [attachmentFilename, setAttachmentFilename] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [createdTicket, setCreatedTicket] = useState<any>(null);
+  interface CreatedTicket {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    priority: string;
+  }
+  const [createdTicket, setCreatedTicket] = useState<CreatedTicket | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,8 +34,9 @@ export default function SubmitTicketPage() {
       });
 
       setCreatedTicket(res.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to submit ticket');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setError(err.response?.data?.message || err.message || 'Failed to submit ticket');
     } finally {
       setLoading(false);
     }

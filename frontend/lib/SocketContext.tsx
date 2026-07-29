@@ -21,11 +21,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!token || !user) {
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
-        setConnected(false);
-      }
       return;
     }
 
@@ -50,6 +45,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       newSocket.disconnect();
+      setSocket(null);
+      setConnected(false);
     };
   }, [token, user]);
 

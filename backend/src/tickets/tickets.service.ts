@@ -252,7 +252,7 @@ export class TicketsService {
     const updateData: Prisma.TicketUpdateInput = {};
 
     if (role === Role.AGENT || role === Role.ADMIN) {
-      updateData.agentId = userId;
+      updateData.agent = { connect: { id: userId } };
       if (ticket.status === TicketStatus.OPEN) {
         updateData.status = TicketStatus.IN_PROGRESS;
       }
@@ -308,7 +308,7 @@ export class TicketsService {
     const updateData: Prisma.TicketUpdateInput = {
       finalReply: resolutionSummary,
       status: TicketStatus.RESOLVED,
-      agentId,
+      agent: { connect: { id: agentId } },
       resolvedAt: new Date(),
     };
 

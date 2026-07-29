@@ -58,11 +58,11 @@ Respond ONLY in valid JSON format:
         const validCategories = Object.values(TicketCategory);
         const validPriorities = Object.values(TicketPriority);
 
-        const category = validCategories.includes(parsed.category)
+        const category = validCategories.includes(parsed.category as TicketCategory)
           ? (parsed.category as TicketCategory)
           : TicketCategory.OTHER;
 
-        const priority = validPriorities.includes(parsed.priority)
+        const priority = validPriorities.includes(parsed.priority as TicketPriority)
           ? (parsed.priority as TicketPriority)
           : TicketPriority.LOW;
 

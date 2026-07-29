@@ -52,7 +52,8 @@ export function KnowledgeUploadModal({ isOpen, onClose, onSuccess }: KnowledgeUp
       setTitle('');
       onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       setError(err.response?.data?.message || err.message || 'Failed to upload document');
     } finally {
       setUploading(false);
