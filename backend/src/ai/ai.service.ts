@@ -139,7 +139,7 @@ Reply Draft:`);
         error.message?.includes('Too Many Requests');
 
       if (isRateLimit) {
-        suggestion = `[AI Copilot Note: Rate limit reached for AI service. Please compose your reply manually or try clicking 'Suggest Draft' again in a few seconds.]`;
+        suggestion = `[AI Draft Note: Rate limit reached for AI service. Please compose your reply manually or try clicking 'Suggest Draft' again in a few seconds.]`;
       } else {
         suggestion = `Hello,\n\nThank you for reaching out regarding "${ticketTitle}". We are looking into your issue and will get back to you shortly.`;
       }

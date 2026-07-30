@@ -49,6 +49,7 @@ export class LlmFactory {
           apiKey,
           modelName,
           temperature,
+          maxTokens: 1000,
           configuration: {
             baseURL:
               process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',

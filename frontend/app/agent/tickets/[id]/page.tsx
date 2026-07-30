@@ -310,7 +310,7 @@ export default function AgentTicketDetailPage({ params }: { params: Promise<{ id
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm">
                 <Bot className="w-5 h-5" />
-                AI Copilot Draft Assistant
+                AI Draft Assistant
               </div>
 
               <button
