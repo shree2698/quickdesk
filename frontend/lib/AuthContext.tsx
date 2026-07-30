@@ -50,10 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   useEffect(() => {
-    if (token && user) {
+    if (token) {
       // Validate token with backend /auth/me
       api.get('/auth/me')
         .then((res) => {
+          // Only update if necessary, or just rely on stable dependency
           setUser(res.data);
           localStorage.setItem('quickdesk_user', JSON.stringify(res.data));
         })
@@ -64,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setLoading(false);
     }
-  }, [token, user, logout]);
+  }, [token, logout]);
 
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);

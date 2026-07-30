@@ -48,7 +48,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setSocket(null);
       setConnected(false);
     };
-  }, [token, user]);
+  }, [token, user?.id]);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>
