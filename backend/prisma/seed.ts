@@ -80,10 +80,10 @@ async function main() {
   });
 
   const agentJohn = await prisma.user.upsert({
-    where: { email: 'agent.john@quickdesk.com' },
+    where: { email: 'john@quickdesk.com' },
     update: { passwordHash: agentPassword, name: 'Agent John', role: Role.AGENT },
     create: {
-      email: 'agent.john@quickdesk.com',
+      email: 'john@quickdesk.com',
       name: 'Agent John',
       passwordHash: agentPassword,
       role: Role.AGENT,
@@ -91,10 +91,10 @@ async function main() {
   });
 
   const agentSarah = await prisma.user.upsert({
-    where: { email: 'agent.sarah@quickdesk.com' },
+    where: { email: 'sarah@quickdesk.com' },
     update: { passwordHash: agentPassword, name: 'Agent Sarah', role: Role.AGENT },
     create: {
-      email: 'agent.sarah@quickdesk.com',
+      email: 'sarah@quickdesk.com',
       name: 'Agent Sarah',
       passwordHash: agentPassword,
       role: Role.AGENT,
@@ -102,10 +102,10 @@ async function main() {
   });
 
   const employeeBob = await prisma.user.upsert({
-    where: { email: 'employee.bob@quickdesk.com' },
+    where: { email: 'bob@quickdesk.com' },
     update: { passwordHash: employeePassword, name: 'Employee Bob', role: Role.EMPLOYEE },
     create: {
-      email: 'employee.bob@quickdesk.com',
+      email: 'bob@quickdesk.com',
       name: 'Employee Bob',
       passwordHash: employeePassword,
       role: Role.EMPLOYEE,
@@ -113,10 +113,10 @@ async function main() {
   });
 
   const employeeAlice = await prisma.user.upsert({
-    where: { email: 'employee.alice@quickdesk.com' },
+    where: { email: 'alice@quickdesk.com' },
     update: { passwordHash: employeePassword, name: 'Employee Alice', role: Role.EMPLOYEE },
     create: {
-      email: 'employee.alice@quickdesk.com',
+      email: 'alice@quickdesk.com',
       name: 'Employee Alice',
       passwordHash: employeePassword,
       role: Role.EMPLOYEE,
