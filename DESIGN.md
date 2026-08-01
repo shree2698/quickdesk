@@ -28,7 +28,7 @@ QuickDesk is an AI-assisted internal helpdesk application. The system follows a 
 │                                 │         │          │                 │
 │                                 │    ┌────┴────┐    │                 │
 │                                 │    │   LLM   │    │                 │
-│                                 │    │  (Groq) │    │                 │
+│                                 │    │(Gemini) │    │                 │
 │                                 │    └─────────┘    │                 │
 │                                 └──────────────────┘                  │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -44,10 +44,10 @@ QuickDesk is an AI-assisted internal helpdesk application. The system follows a 
 | **Backend** | Nest.js + TypeScript | Modular architecture with decorators, built-in support for WebSockets, Guards for RBAC, strong DI container |
 | **Database** | PostgreSQL | Required by spec. Relational model fits ticket/user domain well. ACID compliance for audit logs |
 | **ORM** | Prisma (or TypeORM) | Type-safe database queries, auto-migrations, schema-first design |
-| **LLM Provider** | Groq (free tier) | Fast inference, free tier available, compatible with LangChain |
+| **LLM Provider** | Google Gemini | Fast inference, free tier available, compatible with LangChain |
 | **RAG Framework** | LangChain.js | Required by spec. Handles document loading, chunking, embedding, retrieval, and prompt chaining |
-| **Vector Store** | FAISS (in-memory) | Lightweight, no external service needed, sufficient for small knowledge base |
-| **Embeddings** | HuggingFace / Groq embeddings | Free tier compatible, good quality for short documents |
+| **Vector Store** | pgvector | PostgreSQL extension for vector search |
+| **Embeddings** | gemini-embedding-001 | Free tier compatible, good quality for short documents |
 | **Real-Time** | Socket.io | Automatic reconnection, room-based broadcasting, fallback to polling, widely supported |
 | **Auth** | JWT + bcrypt | Required by spec. Stateless auth, easy role embedding in token payload |
 | **Styling** | Tailwind CSS | Rapid UI development, consistent design system, utility-first approach |
@@ -123,12 +123,7 @@ backend/
 │   │   ├── ai.module.ts
 │   │   ├── ai.service.ts         # LLM calls for categorization + priority
 │   │   ├── rag.service.ts        # RAG pipeline: embed → retrieve → generate
-│   │   └── knowledge-base/       # Markdown articles
-│   │       ├── vpn-setup.md
-│   │       ├── password-reset.md
-│   │       ├── leave-policy.md
-│   │       ├── expense-reimbursement.md
-│   │       └── laptop-request.md
+│   │   └── knowledge-base/       # Handles admin uploaded files
 │   ├── websocket/
 │   │   ├── websocket.module.ts
 │   │   ├── websocket.gateway.ts  # Socket.io gateway
@@ -248,24 +243,24 @@ erDiagram
 ┌──────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────┐
 │  Knowledge   │     │   Document   │     │  Embedding  │     │  Vector  │
 │  Base (MD)   │────►│   Chunking   │────►│   Model     │────►│  Store   │
-│  5-10 files  │     │  ~200 tokens │     │  (HF/Groq)  │     │ (FAISS)  │
+│Admin uploaded│     │  ~200 tokens │     │  (Gemini)   │     │(pgvector)│
 └──────────────┘     └──────────────┘     └─────────────┘     └────┬─────┘
                                                                     │
                                                               Retrieval
                                                                     │
 ┌──────────────┐     ┌──────────────┐     ┌─────────────┐     ┌────▼─────┐
 │  AI Draft    │◄────│   LLM Call   │◄────│   Prompt    │◄────│  Top-K   │
-│  Response    │     │   (Groq)     │     │  Template   │     │ Relevant │
+│  Response    │     │   (Gemini)   │     │  Template   │     │ Relevant │
 │  + Citations │     └──────────────┘     └─────────────┘     │  Chunks  │
 └──────────────┘                                              └──────────┘
 ```
 
 ### Pipeline Steps:
-1. **Load**: Read markdown files from `knowledge-base/` directory
+1. **Load**: Read markdown files from admin uploads (stored in DB and `backend/uploads/knowledge-base/`)
 2. **Split**: Chunk documents using `RecursiveCharacterTextSplitter` (~200-300 token chunks, 50 token overlap)
-3. **Embed**: Generate embeddings using HuggingFace or Groq embedding model
-4. **Store**: Index embeddings in FAISS in-memory vector store
-5. **Retrieve**: On ticket query, find top-K (k=3) most similar chunks
+3. **Embed**: Generate embeddings using Gemini embedding model
+4. **Store**: Index embeddings in PostgreSQL using pgvector
+5. **Retrieve**: On ticket query, find top-K (k=4) most similar chunks
 6. **Generate**: Pass ticket + retrieved chunks to LLM with structured prompt
 7. **Return**: AI draft reply + source citations (document names)
 

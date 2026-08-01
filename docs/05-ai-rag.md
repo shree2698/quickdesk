@@ -13,8 +13,8 @@ Traditional helpdesks rely on manual triage by dispatchers and require users to 
 ---
 
 ## LLM Selection
-- **Classification & Chatbot**: `gemini-1.5-flash` is used due to its high speed, low latency (under 2 seconds), and token-efficiency.
-- **Agent Copilot Suggester**: `gemini-1.5-pro` is used for deeper context comprehension when generating long, detailed email/chat drafts that require analyzing complex ticket history logs.
+- **Classification & Chatbot**: `gemini-2.0-flash` is used due to its high speed, low latency, and token-efficiency.
+- **Agent Copilot Suggester**: `gemini-2.0-flash` is used for context comprehension when generating long, detailed email/chat drafts that require analyzing complex ticket history logs.
 
 ---
 
@@ -27,7 +27,7 @@ To prevent hallucinations, the model is strictly constrained:
 ---
 
 ## Category & Priority Prediction
-When a ticket is created, the title and description are processed by `gemini-1.5-flash` using structured JSON schema prompts.
+When a ticket is created, the title and description are processed by `gemini-2.0-flash` using structured JSON schema prompts.
 
 ### 1. Category Prediction
 The model analyzes context and assigns the issue to one of the following enums:
@@ -46,16 +46,16 @@ Priority is triaged using rule-based metrics mapped through prompt engineering:
 ---
 
 ## Knowledge Base Processing
-Corporate policies are stored as markdown documents under the `knowledge-base/` directory.
+Corporate policies are uploaded via the admin UI and stored in the database, with files saved under `backend/uploads/knowledge-base/`.
 
 ### 1. Chunking Strategy
 - **Splitter**: LangChain's `RecursiveCharacterTextSplitter`.
-- **Chunk Size**: 500 characters.
-- **Overlap**: 50 characters (ensures concepts aren't lost at split points).
-- **Separators**: Paragraphs (`\n\n`), sentences (`\n`), spaces (` `).
+- **Chunk Size**: 1000 characters.
+- **Overlap**: 200 characters (ensures concepts aren't lost at split points).
+- **Separators**: Paragraphs (`\n\n`), sentences (`\n`), spaces (` `), and empty strings (`""`).
 
 ### 2. Embeddings
-We use the **`text-embedding-004`** model via the Gemini API to convert each text chunk into a **768-dimensional floating-point array**.
+We use the **`gemini-embedding-001`** model via the Gemini API to convert each text chunk. We slice the output to a **768-dimensional floating-point array**.
 
 ---
 
@@ -66,9 +66,9 @@ Embeddings are stored in PostgreSQL using the `pgvector` column type.
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE "KnowledgeArticleChunk" (
+CREATE TABLE "knowledge_base_chunks" (
   "id" TEXT PRIMARY KEY,
-  "articleId" TEXT REFERENCES "KnowledgeArticle"("id") ON DELETE CASCADE,
+  "knowledgeBaseId" TEXT REFERENCES "knowledge_bases"("id") ON DELETE CASCADE,
   "content" TEXT NOT NULL,
   "embedding" vector(768) NOT NULL,
   "chunkIndex" INTEGER NOT NULL
@@ -76,12 +76,12 @@ CREATE TABLE "KnowledgeArticleChunk" (
 ```
 
 ### 2. Similarity Search Query
-When a user asks a question, the query text is embedded and compared against stored chunks using the cosine distance operator (`<=>`). We fetch the top $k = 3$ matching chunks:
+When a user asks a question, the query text is embedded and compared against stored chunks using the cosine distance operator (`<=>`). We fetch the top $k = 4$ matching chunks:
 ```sql
-SELECT content, articleId, (embedding <=> $1) AS distance 
-FROM "KnowledgeArticleChunk" 
-ORDER BY distance ASC 
-LIMIT 3;
+SELECT content, metadata, (1 - (embedding <=> $1::vector)) AS similarity 
+FROM "knowledge_base_chunks" 
+ORDER BY embedding <=> $1::vector ASC 
+LIMIT 4;
 ```
 
 ---

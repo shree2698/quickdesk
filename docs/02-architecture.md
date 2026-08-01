@@ -61,7 +61,7 @@ QuickDesk uses a hybrid AI approach combining predictive categorization with ret
 
 - **Predictive AI**: When a ticket is submitted, the backend formats the issue title and description, passing it to Gemini with instructions to return a structured JSON response containing the predicted category and priority level.
 - **Generative RAG AI**:
-  1. **Indexing**: Internal markdown documents in the `knowledge-base/` directory are loaded, split into chunks of ~500 characters with 50-character overlaps, and embedded using Gemini's `text-embedding-004` model.
+  1. **Indexing**: Internal markdown documents uploaded via the admin UI to `backend/uploads/knowledge-base/` are loaded, split into chunks of ~1000 characters with 200-character overlaps, and embedded using Gemini's `gemini-embedding-001` model.
   2. **Vector Store**: Embeddings are written into a PostgreSQL column of type `vector(768)` managed by `pgvector`.
   3. **Retrieval**: When a query is made, pgvector runs a cosine similarity search to fetch the top 3 relevant chunks.
   4. **Generation**: The prompt template combines the user query, relevant document context, and guidelines, prompting Gemini to generate a response complete with source doc citations.

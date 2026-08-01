@@ -4,7 +4,7 @@ AI-assisted internal helpdesk. Coding assessment submission.
 
 ## What this is
 
-QuickDesk is an internal helpdesk where employees submit support tickets and a small team of agents resolves them, with an LLM sitting beside the agent rather than in front of the employee. On submission, the backend calls Gemini to suggest a category and priority, stores both as AI-suggested values alongside the live values, and broadcasts the ticket to online agents over Socket.io. In the ticket detail view an agent clicks "Suggest Draft" to get a reply drafted by a LangChain RAG chain grounded in five markdown knowledge base articles stored as pgvector embeddings, with the source article titles returned as citations. The agent edits the draft, sends it, and resolves the ticket. Every agent override of the AI's category or priority is written to an audit log (who, when, from, to) and shown on the ticket page, and an agent-only metrics route reports ticket counts by status and category, median resolution time, and how often agents override the AI's category.
+QuickDesk is an internal helpdesk where employees submit support tickets and a small team of agents resolves them, with an LLM sitting beside the agent rather than in front of the employee. On submission, the backend calls Gemini to suggest a category and priority, stores both as AI-suggested values alongside the live values, and broadcasts the ticket to online agents over Socket.io. In the ticket detail view an agent clicks "Suggest Draft" to get a reply drafted by a LangChain RAG chain grounded in uploaded knowledge base articles stored as pgvector embeddings, with the source article titles returned as citations. The agent edits the draft, sends it, and resolves the ticket. Every agent override of the AI's category or priority is written to an audit log (who, when, from, to) and shown on the ticket page, and an agent-only metrics route reports ticket counts by status and category, median resolution time, and how often agents override the AI's category.
 
 ## How to run it locally
 
@@ -72,7 +72,7 @@ Applies the three committed migrations in `backend/prisma/migrations/`, which cr
 npm run db:seed
 ```
 
-Creates the accounts below, three sample tickets (open / resolved / in progress) with a sample audit log entry and chat thread, then chunks and embeds every file in `backend/knowledge-base/`. Without `GEMINI_API_KEY` the seed prints a warning and stores chunks with a NULL embedding, which means vector search finds nothing and the AI falls back to ungrounded answers.
+Creates the accounts below, three sample tickets (open / resolved / in progress) with a sample audit log entry and chat thread. Without `GEMINI_API_KEY` the seed prints a warning and stores chunks with a NULL embedding (if any KB articles were present during seed), which means vector search finds nothing and the AI falls back to ungrounded answers. Note: Knowledge base articles should be uploaded via the Admin UI.
 
 ### 6. Run both servers
 
@@ -120,7 +120,7 @@ Passwords are bcrypt hashed at 10 salt rounds, in both the seed and `AuthService
 | `npm run prisma:reset` | Drop everything and replay all migrations |
 | `npm run db:seed` | Seed users, tickets, and KB embeddings |
 
-To add a knowledge base article, drop a markdown file into `backend/knowledge-base/` and re-run `npm run db:seed`.
+To add a knowledge base article, use the Admin Knowledge Base upload feature in the frontend. Uploaded files are stored in `backend/uploads/knowledge-base/` and chunked/embedded by a background job.
 
 ## Architecture diagram
 
@@ -229,7 +229,7 @@ Next.js App Router, for file-system routing that mirrors the role boundaries (`a
 **b) How did you structure the RAG pipeline? Chunk size, embedding model, retriever, prompt?**
 
 - Loader: `DocumentLoaderService` handles pdf / docx / csv and treats everything else as plain text or markdown.
-- Splitter: `RecursiveCharacterTextSplitter`, `chunkSize: 1000`, `chunkOverlap: 200`, separators `['\n\n', '\n', ' ', '']`. The five seeded articles run 112 to 290 words each, so most produce a single chunk. Retrieval is effectively whole-article retrieval right now, which is fine for a corpus this small and would need a smaller chunk size (200 to 300) the moment real multi-page policy PDFs land.
+- Splitter: `RecursiveCharacterTextSplitter`, `chunkSize: 1000`, `chunkOverlap: 200`, separators `['\n\n', '\n', ' ', '']`. The chunked articles produce appropriately sized pieces of text. Retrieval is effectively whole-article retrieval right now for small docs, which is fine for a corpus this small and would need a smaller chunk size (200 to 300) the moment real multi-page policy PDFs land.
 - Embeddings: `gemini-embedding-001` through `GoogleGenerativeAIEmbeddings`. Its native output is longer than 768 dims, so both `VectorStoreService` and the seed script slice the vector to its first 768 values to fit the `vector(768)` column. Truncating Matryoshka-style embeddings is supported in principle, but the code does not re-normalize after slicing, so cosine scores are slightly off. It works because query and document vectors are truncated identically. The clean fix is to re-normalize, or to store the full dimensionality.
 - Store: pgvector in the same Postgres instance, queried with raw SQL (`1 - (embedding <=> $1::vector) as similarity`, `ORDER BY embedding <=> $1::vector LIMIT 4`) because Prisma cannot express an `Unsupported("vector(768)")` column in its typed API.
 - Retriever: top k = 4, with a relevance gate at similarity 0.4 on the top hit.

@@ -69,7 +69,7 @@
 | T-06 | Define Prisma schema — `User` model with role enum (`EMPLOYEE`, `AGENT`, `ADMIN`) | Backend | ✅ Done | T-02 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L83-L90) |
 | T-07 | Define Prisma schema — `Ticket` model with status, category, priority enums and AI fields (`aiCategory`, `aiPriority`, `aiDraftReply`, `finalReply`, `ragCitations`) | Backend | ✅ Done | T-06 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L92-L102) |
 | T-08 | Define Prisma schema — `Message` model (ticket chat) | Backend | ✅ Done | T-07 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L104-L110) |
-| T-09 | Define Prisma schema — `AuditLog` model + `KnowledgeArticle` & `KnowledgeArticleChunk` models (with pgvector) | Backend | ✅ Done | T-07 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L112-L133) |
+| T-09 | Define Prisma schema — `AuditLog` model + `KnowledgeBase` & `KnowledgeBaseChunk` models (with pgvector) | Backend | ✅ Done | T-07 | 2026-07-25 | [03-database.md](file:///E:/ME/quickdesk/docs/03-database.md#L112-L133) |
 | T-10 | Create `PrismaModule` & `PrismaService` as global NestJS module | Backend | ✅ Done | T-06 | 2026-07-25 | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L55) |
 
 ---
@@ -117,10 +117,10 @@
 | ID | Task | Type | Status | Depends On | Completed | Ref Doc |
 |----|------|:----:|:------:|:----------:|:---------:|---------|
 | T-26 | Create `AiModule` with `RagService` and `AiService` | Backend | ✅ Done | T-10 | 2026-07-25 | [02-architecture.md](file:///E:/ME/quickdesk/docs/02-architecture.md#L54) |
-| T-27 | Implement KB document loader — read markdown files from `knowledge-base/`, parse with LangChain `DirectoryLoader` | Backend | ✅ Done | T-26, T-05 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L48-L55) |
+| T-27 | Implement KB document loader — process admin-uploaded markdown files from `backend/uploads/knowledge-base/` | Backend | ✅ Done | T-26, T-05 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L48-L55) |
 | T-28 | Implement chunking — `RecursiveCharacterTextSplitter` (500 chars, 50 overlap) | Backend | ✅ Done | T-27 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L51-L55) |
-| T-29 | Implement embedding generation — use Gemini `text-embedding-004` (768-dim vectors) via LangChain | Backend | ✅ Done | T-28 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L57-L58) |
-| T-30 | Set up vector store — pgvector column in `KnowledgeArticleChunk`, HNSW index, cosine similarity search | Backend | ✅ Done | T-29, T-09 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L62-L84) |
+| T-29 | Implement embedding generation — use Gemini `gemini-embedding-001` (768-dim vectors) via LangChain | Backend | ✅ Done | T-28 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L57-L58) |
+| T-30 | Set up vector store — pgvector column in `KnowledgeBaseChunk`, HNSW index, cosine similarity search | Backend | ✅ Done | T-29, T-09 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L62-L84) |
 | T-31 | Implement RAG retrieval + generation — top-K (k=3) similarity search → prompt template → Gemini LLM → response with citations | Backend | ✅ Done | T-30 | 2026-07-25 | [05-ai-rag.md](file:///E:/ME/quickdesk/docs/05-ai-rag.md#L89-L116) |
 | T-32 | Implement `POST /api/ai/chat` — RAG-assisted Q&A endpoint for employees, with fallback when no relevant chunks found | Backend | ✅ Done | T-31 | 2026-07-25 | [04-api.md](file:///E:/ME/quickdesk/docs/04-api.md#L99-L120) |
 
@@ -412,7 +412,7 @@ graph TD
 | 2026-07-25 | T-06 | ⬜ → ✅ | Prisma schema User model defined with Role enum |
 | 2026-07-25 | T-07 | ⬜ → ✅ | Prisma schema Ticket model defined with Status/Category/Priority enums & AI fields |
 | 2026-07-25 | T-08 | ⬜ → ✅ | Prisma schema Message model defined |
-| 2026-07-25 | T-09 | ⬜ → ✅ | Prisma schema AuditLog, KnowledgeArticle & Chunk (pgvector) models defined |
+| 2026-07-25 | T-09 | ⬜ → ✅ | Prisma schema AuditLog, KnowledgeBase & Chunk (pgvector) models defined |
 | 2026-07-25 | T-10 | ⬜ → ✅ | Global PrismaModule & PrismaService created in NestJS |
 | 2026-07-25 | T-11 | ⬜ → ✅ | AuthModule created with AuthController and AuthService |
 | 2026-07-25 | T-12 | ⬜ → ✅ | POST /api/auth/register implemented with bcrypt password hashing |
@@ -433,7 +433,7 @@ graph TD
 | 2026-07-25 | T-26 | ⬜ → ✅ | AiModule created with RagService and AiService |
 | 2026-07-25 | T-27 | ⬜ → ✅ | KB markdown reader and document loader implemented in RagService |
 | 2026-07-25 | T-28 | ⬜ → ✅ | Chunking strategy with RecursiveCharacterTextSplitter (500 chars, 50 overlap) implemented |
-| 2026-07-25 | T-29 | ⬜ → ✅ | Embedding generation with text-embedding-004 model integrated |
+| 2026-07-25 | T-29 | ⬜ → ✅ | Embedding generation with gemini-embedding-001 model integrated |
 | 2026-07-25 | T-30 | ⬜ → ✅ | Cosine similarity vector search queries configured with pgvector |
 | 2026-07-25 | T-31 | ⬜ → ✅ | Grounded RAG Q&A answering pipeline with citations implemented |
 | 2026-07-25 | T-32 | ⬜ → ✅ | POST /api/ai/chat endpoint created with similarity fallback checks |

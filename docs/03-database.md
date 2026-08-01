@@ -109,15 +109,15 @@ An individual communication entry in a ticket conversation room.
 - `senderId` (String, FK -> `User.id`): Author.
 - `createdAt` (DateTime).
 
-### `KnowledgeArticle` & `KnowledgeArticleChunk`
+### `KnowledgeBase` & `KnowledgeBaseChunk`
 Splits KB docs into manageable parts to perform semantic searches.
-- **KnowledgeArticle**: Tracks full files.
+- **KnowledgeBase**: Tracks full files.
   - `id` (String, UUID, PK).
   - `title` (String): Document title (e.g. "VPN Setup Guide").
   - `filename` (String, UK): Source path.
-- **KnowledgeArticleChunk**: Holds pieces of text and vector coordinates.
+- **KnowledgeBaseChunk**: Holds pieces of text and vector coordinates.
   - `id` (String, UUID, PK).
-  - `articleId` (String, FK -> `KnowledgeArticle.id`).
+  - `knowledgeBaseId` (String, FK -> `KnowledgeBase.id`).
   - `content` (Text): The raw text segment.
   - `embedding` (Vector, 768 dimensions): Mathematical representation.
   - `chunkIndex` (Int): Order within document.
@@ -148,7 +148,7 @@ To optimize standard dashboard query lookups and vector searches, we implement t
 - **`idx_messages_ticketId_createdAt`** (B-Tree composite): Optimizes chat thread queries sorted chronologically.
 - **`idx_chunks_embedding`** (HNSW Vector Index): Employs the Hierarchical Navigable Small World algorithm on the embedding column. It speeds up the K-Nearest Neighbors (K-NN) searches using Cosine Distance calculations:
   ```sql
-  CREATE INDEX ON "KnowledgeArticleChunk" 
+  CREATE INDEX ON "knowledge_base_chunks" 
   USING hnsw (embedding vector_cosine_ops);
   ```
 
@@ -156,7 +156,7 @@ To optimize standard dashboard query lookups and vector searches, we implement t
 
 ## Constraints
 - **Foreign Keys**: Cascading deletions set on messages, chunks, and audit logs. Assigning null sets on agent deletions.
-- **Unique Constraints**: Unique constraint on `User.email` and `KnowledgeArticle.filename`.
+- **Unique Constraints**: Unique constraint on `User.email` and `KnowledgeBase.filename`.
 - **Value validation**: Ticket statuses, roles, categories, and priorities must correspond directly to predefined enums.
 
 ---
