@@ -39,7 +39,7 @@ QuickDesk solves these problems through an **AI-First Helpdesk workflow**:
 
 ### 3. Admin & Configuration Panel
 - **User & Role Management**: Creation and permission assignment for Employees, Agents, and Admins.
-- **Knowledge Base Manager**: Admin UI to upload, process, and chunk markdown-based internal guides into the vector database.
+- **Knowledge Base Manager**: Supports two methods for adding articles: initial seeding by placing markdown files in `backend/knowledge-base/` (processed via `db:seed`), and an Admin UI to dynamically upload, process, and chunk markdown-based internal guides into the vector database.
 - **Service Metrics & SLA Dashboard**: Core metrics showing average time-to-first-response, ticket resolution rates, and CSAT (Customer Satisfaction) feedback.
 
 ---

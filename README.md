@@ -72,7 +72,7 @@ Applies the three committed migrations in `backend/prisma/migrations/`, which cr
 npm run db:seed
 ```
 
-Creates the accounts below, three sample tickets (open / resolved / in progress) with a sample audit log entry and chat thread. Without `GEMINI_API_KEY` the seed prints a warning and stores chunks with a NULL embedding (if any KB articles were present during seed), which means vector search finds nothing and the AI falls back to ungrounded answers. Note: Knowledge base articles should be uploaded via the Admin UI.
+Creates the accounts below, three sample tickets (open / resolved / in progress) with a sample audit log entry and chat thread. It also seeds the knowledge base by processing any markdown files placed in the `backend/knowledge-base/` directory and chunking them into the database. Without `GEMINI_API_KEY` the seed prints a warning and stores chunks with a NULL embedding (if any KB articles were present during seed), which means vector search finds nothing and the AI falls back to ungrounded answers. Note: Knowledge base articles can also be dynamically uploaded via the Admin UI.
 
 ### 6. Run both servers
 
@@ -120,7 +120,9 @@ Passwords are bcrypt hashed at 10 salt rounds, in both the seed and `AuthService
 | `npm run prisma:reset` | Drop everything and replay all migrations |
 | `npm run db:seed` | Seed users, tickets, and KB embeddings |
 
-To add a knowledge base article, use the Admin Knowledge Base upload feature in the frontend. Uploaded files are stored in `backend/uploads/knowledge-base/` and chunked/embedded by a background job.
+There are two ways to add knowledge base articles:
+1. **Initial Seeding**: Place markdown files in the `backend/knowledge-base/` directory and run `npm run db:seed`. This is useful for populating the system during initial setup.
+2. **Admin Upload**: Use the Admin Knowledge Base upload feature in the frontend to upload docs dynamically. Uploaded files are stored in `backend/uploads/knowledge-base/` and chunked/embedded by a background job.
 
 ## Architecture diagram
 

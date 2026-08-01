@@ -256,7 +256,9 @@ erDiagram
 ```
 
 ### Pipeline Steps:
-1. **Load**: Read markdown files from admin uploads (stored in DB and `backend/uploads/knowledge-base/`)
+1. **Load**: Read markdown files from two sources:
+   - **Initial Seeding**: Markdown files dropped into `backend/knowledge-base/` processed during `npm run db:seed`.
+   - **Admin Uploads**: Files uploaded dynamically via the Admin UI (stored in DB and `backend/uploads/knowledge-base/`).
 2. **Split**: Chunk documents using `RecursiveCharacterTextSplitter` (~200-300 token chunks, 50 token overlap)
 3. **Embed**: Generate embeddings using Gemini embedding model
 4. **Store**: Index embeddings in PostgreSQL using pgvector

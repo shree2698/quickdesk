@@ -46,7 +46,9 @@ Priority is triaged using rule-based metrics mapped through prompt engineering:
 ---
 
 ## Knowledge Base Processing
-Corporate policies are uploaded via the admin UI and stored in the database, with files saved under `backend/uploads/knowledge-base/`.
+There are two ways to add corporate policies to the knowledge base:
+1. **Initial Seeding**: Markdown files can be dropped into the `backend/knowledge-base/` directory and processed during initial setup by running `npm run db:seed`.
+2. **Admin Upload**: Files can be uploaded dynamically via the Admin UI, stored in the database, and saved under `backend/uploads/knowledge-base/`.
 
 ### 1. Chunking Strategy
 - **Splitter**: LangChain's `RecursiveCharacterTextSplitter`.
